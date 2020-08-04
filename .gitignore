@@ -1,0 +1,12 @@
+# vim swp files
+*.swp
+
+# PyCharm
+.idea/
+__pychace__/
+
+# Token for running bot
+token.txt
+
+# Data generated & stored
+src/data
