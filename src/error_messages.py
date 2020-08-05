@@ -11,10 +11,10 @@ async def error_wrong_arg_no(message, command, args):
         out += str(command.no_args()[0])
     else:
         for i in range(0, len(command.no_args()) - 1):
-            out += command.no_args()[i]
+            out += str(command.no_args()[i])
             if i + 2 < len(command.no_args()):
                 out += ", "
-        out += "or " + str(command.no_args()[len(command.no_args()) - 1])
+        out += " or " + str(command.no_args()[len(command.no_args()) - 1])
     out += " arguments but found: "
     out += str(len(args)) + "\n"
     import help

@@ -81,10 +81,8 @@ async def on_message(message):
         await error_messages.error_unknown(message, exc, "parsing arguments")
         return
 
-    await inputCommand.process(message, args)
     try:
-        #await inputCommand.process(message, args)
-        pass
+        await inputCommand.process(message, args)
     except Exception as exc:
         await error_messages.error_unknown(message, exc, "processing " + inputCommand.command_title())
         return

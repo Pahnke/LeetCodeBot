@@ -12,7 +12,7 @@ import discord_funcs
 
 async def display_problem_leader_board(message, problem_id):
     out = "Leaderboard for Problem {}: {}\n".format(problem_id, problems_table.get_name(problem_id))
-    out += "```" + generate_problem_leader_board_message(problem_id) + "``` "
+    out += "```" + generate_problem_leader_board_message(problem_id) + "```"
     await discord_funcs.reply_to_message(message, out)
 
 
@@ -23,10 +23,14 @@ def generate_problem_leader_board_message(problem_id):
     headers = get_problem_leader_board_headers()
     header_sizes = get_problem_leader_board_header_sizes(headers, attempts, points)
     table = create_problem_header(headers, header_sizes)
-    for i in range(0, len(attempts)):
-        table += create_attempt_row(attempts[i], header_sizes, i + 1,
+    rank = 1
+    for i in range(0, len(attempts) - 1):
+        table += create_attempt_row(attempts[i], header_sizes, rank,
                                     points[attempts[i][constants.ProblemFileStruct.NAME.value]])
-
+        if attempts[i][constants.ProblemFileStruct.PERCENT.value] != attempts[i + 1][constants.ProblemFileStruct.PERCENT.value]:
+            rank += 1
+    last = attempts[len(attempts) - 1]
+    table += create_attempt_row(last, header_sizes, rank, points[last[constants.ProblemFileStruct.NAME.value]])
     table += "\n"
     return table
 
@@ -74,6 +78,7 @@ def add_padding_left_align(body, header_size):
 
 def get_problem_leader_board_header_sizes(headers, attempts, points):
     header_sizes = [len(h) + 3 for h in headers]
+    header_sizes[constants.ProblemHeaders.POINTS.value] = 1 + len(headers[constants.ProblemHeaders.POINTS.value])
     for a in attempts:
         header_sizes = compare_problem_header_size(a, header_sizes)
 
@@ -117,8 +122,15 @@ def generate_global_leader_board_message():
     header_sizes = get_global_leader_board_header_sizes(headers, leader_board)
 
     table = create_global_header(headers, header_sizes)
-    for i in range(0, len(leader_board)):
-        table += create_global_row(leader_board[i], header_sizes, i + 1)
+    rank = 1
+    for i in range(0, len(leader_board) - 1):
+        table += create_global_row(leader_board[i], header_sizes, rank)
+        if (leader_board[i][constants.GlobalLeaderboardStruct.POINTS.value]
+                != leader_board[i + 1][constants.GlobalLeaderboardStruct.POINTS.value] or
+            leader_board[i][constants.GlobalLeaderboardStruct.AVERAGE_PERCENT.value] !=
+                leader_board[i + 1][constants.GlobalLeaderboardStruct.AVERAGE_PERCENT.value]):
+            rank += 1
+    table += create_global_row(leader_board[len(leader_board) - 1], header_sizes, rank)
 
     table += "\n"
     return table
@@ -262,14 +274,14 @@ def get_problem_leader_board(problem_id):
 def sort_problem_leader_board(attempts):
     if len(attempts) == 0:
         return attempts
-    attempts.sort(key=lambda x: x[constants.ProblemFileStruct.PERCENT.value])
+    attempts.sort(key=lambda x: -x[constants.ProblemFileStruct.PERCENT.value])
     return attempts
 
 
 def sort_global_leader_board(leader_board):
     if len(leader_board) == 0:
         return leader_board
-    leader_board.sort(key=lambda x: (x[constants.GlobalLeaderboardStruct.POINTS.value], x[constants.GlobalLeaderboardStruct.AVERAGE_PERCENT.value]))
+    leader_board.sort(key=lambda x: (-x[constants.GlobalLeaderboardStruct.POINTS.value], -x[constants.GlobalLeaderboardStruct.AVERAGE_PERCENT.value]))
     return leader_board
 
 
