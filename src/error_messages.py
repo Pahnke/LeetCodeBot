@@ -61,7 +61,7 @@ async def error_unknown(message, e, context):
 
 
 def error_top(title):
-    return "--- ERROR: " + title + " ---\n"
+    return "---- ERROR: " + title + " ----\n"
 
 
 def error_bottom(title):

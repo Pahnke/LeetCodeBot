@@ -52,7 +52,7 @@ ALL_ID = -1
 FIRST_ID = 0
 
 # Checking if active
-NO_PLAYERS = 1
+NO_PLAYERS = 5
 MIN_PERCENT = 45.0
 
 # Maximum no chars in a message
