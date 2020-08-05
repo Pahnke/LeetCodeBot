@@ -14,7 +14,7 @@ async def display_problem(message, problem):
     out += " - "
     out += problem[constants.ProblemTableStruct.NAME.value]
     out += " - "
-    out += problem[constants.ProblemTableStruct.URL.value]
+    out += "<" + problem[constants.ProblemTableStruct.URL.value] + ">"
     await discord_funcs.reply_to_message(message, out)
 
 
