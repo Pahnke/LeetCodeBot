@@ -29,8 +29,9 @@ def generate_problem_leader_board_message(problem_id):
                                     points[attempts[i][constants.ProblemFileStruct.NAME.value]])
         if attempts[i][constants.ProblemFileStruct.PERCENT.value] != attempts[i + 1][constants.ProblemFileStruct.PERCENT.value]:
             rank += 1
-    last = attempts[len(attempts) - 1]
-    table += create_attempt_row(last, header_sizes, rank, points[last[constants.ProblemFileStruct.NAME.value]])
+    if len(attempts) != 0:
+        last = attempts[len(attempts) - 1]
+        table += create_attempt_row(last, header_sizes, rank, points[last[constants.ProblemFileStruct.NAME.value]])
     table += "\n"
     return table
 
@@ -130,7 +131,8 @@ def generate_global_leader_board_message():
             leader_board[i][constants.GlobalLeaderboardStruct.AVERAGE_PERCENT.value] !=
                 leader_board[i + 1][constants.GlobalLeaderboardStruct.AVERAGE_PERCENT.value]):
             rank += 1
-    table += create_global_row(leader_board[len(leader_board) - 1], header_sizes, rank)
+    if len(leader_board) != 0:
+        table += create_global_row(leader_board[len(leader_board) - 1], header_sizes, rank)
 
     table += "\n"
     return table
