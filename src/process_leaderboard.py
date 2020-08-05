@@ -1,32 +1,31 @@
-from csv_utils import *
-from init import create_leaderboard
-from problem_files import get_attempts
-from problems_table import get_difficulty, get_name
-from constants import GlobalLeaderboardStruct, \
-    ProblemFileStruct, DIFFICULTY_MULTIPLIER, ProblemHeaders, GlobalHeaders
-from discord_funcs import reply_to_message
+import csv_utils
+import init
+import problem_files
+import problems_table
+import constants
+import discord_funcs
 
 ''' LEADERBOARDS '''
 # data/globalLeaderboard.csv
 # [username, points, problems tried, average percentage]
 
 
-def display_problem_leader_board(message, problem_id):
-    out = "Leaderboard for Problem {}: ".format(problem_id)
-    out += get_name(problem_id) + "\n"
-    out += generate_problem_leader_board_message(problem_id)
-    reply_to_message(message, out)
+async def display_problem_leader_board(message, problem_id):
+    out = "Leaderboard for Problem {}: {}\n".format(problem_id, problems_table.get_name(problem_id))
+    out += "```" + generate_problem_leader_board_message(problem_id) + "``` "
+    await discord_funcs.reply_to_message(message, out)
 
 
 def generate_problem_leader_board_message(problem_id):
-    attempts = get_attempts(problem_id)
+    attempts = problem_files.get_attempts(problem_id)
     attempts = sort_problem_leader_board(attempts)
-    points = calculate_points(attempts, get_difficulty(problem_id))
+    points = calculate_points(attempts, problems_table.get_difficulty(problem_id))
     headers = get_problem_leader_board_headers()
     header_sizes = get_problem_leader_board_header_sizes(headers, attempts, points)
     table = create_problem_header(headers, header_sizes)
     for i in range(0, len(attempts)):
-        table += create_attempt_row(attempts[i], header_sizes, i + 1, points[i])
+        table += create_attempt_row(attempts[i], header_sizes, i + 1,
+                                    points[attempts[i][constants.ProblemFileStruct.NAME.value]])
 
     table += "\n"
     return table
@@ -35,12 +34,12 @@ def generate_problem_leader_board_message(problem_id):
 def create_problem_header(headers, header_sizes):
     header = ""
     for i in range(0, len(headers)):
-        (gap, offset) = divmod(header_sizes[i] - len(headers[i]) - 2, 2)
+        (gap, offset) = divmod(header_sizes[i] - len(headers[i]), 2)
         header += ' ' * gap + headers[i] + ' ' * (gap + offset)
         if i + 1 != len(headers):
             header += "|"
 
-    dashes = '-' * len(headers)
+    dashes = '-' * len(header)
     header = header + "\n" + dashes + "\n"
     return header
 
@@ -48,73 +47,74 @@ def create_problem_header(headers, header_sizes):
 def create_attempt_row(attempt, header_sizes, rank, points):
     row = ""
     body = str(rank)
-    row += add_padding(body, header_sizes[ProblemHeaders.RANK])
+    row += add_padding_left_align(body, header_sizes[constants.ProblemHeaders.RANK.value])
 
-    body = attempt[ProblemFileStruct.NAME]
-    row += add_padding(body, header_sizes[ProblemHeaders.NAME])
+    body = attempt[constants.ProblemFileStruct.NAME.value]
+    row += add_padding_left_align(body, header_sizes[constants.ProblemHeaders.NAME.value])
 
-    body = attempt[ProblemFileStruct.PERCENT] + "%"
-    row += add_padding(body, header_sizes[ProblemHeaders.PERCENT])
+    body = format(attempt[constants.ProblemFileStruct.PERCENT.value], ".2f") + "%"
+    row += add_padding_left_align(body, header_sizes[constants.ProblemHeaders.PERCENT.value])
 
-    body = "O(" + attempt[ProblemFileStruct.COMPLEXITY] + ")"
-    row += add_padding(body, header_sizes[ProblemHeaders.BIG_O])
+    body = "O(" + attempt[constants.ProblemFileStruct.COMPLEXITY.value] + ")"
+    row += add_padding_left_align(body, header_sizes[constants.ProblemHeaders.BIG_O.value])
 
-    body = attempt[ProblemFileStruct.LANGUAGE]
-    row += add_padding(body, header_sizes[ProblemHeaders.LANGUAGE])
+    body = attempt[constants.ProblemFileStruct.LANGUAGE.value]
+    row += add_padding_left_align(body, header_sizes[constants.ProblemHeaders.LANGUAGE.value])
 
-    body = points
-    row += add_padding(body, header_sizes[ProblemHeaders.POINTS])
+    body = format(points, ".2f")
+    row += add_padding_left_align(body, header_sizes[constants.ProblemHeaders.POINTS.value])
 
     row += "\n"
     return row
 
 
-def add_padding(body, header_size):
+def add_padding_left_align(body, header_size):
     return body + ' ' * (1 + header_size - len(body))
 
 
-def get_problem_leader_board_header_sizes(headers, attempts, max_points):
-    header_sizes = [len(h) + 4 for h in headers]
+def get_problem_leader_board_header_sizes(headers, attempts, points):
+    header_sizes = [len(h) + 3 for h in headers]
     for a in attempts:
         header_sizes = compare_problem_header_size(a, header_sizes)
 
-    header_sizes[ProblemHeaders.POINTS] = max(len(str(max_points)),
-                                              header_sizes[ProblemHeaders.POINTS])
+    max_points = max([0] + [points[name] for name in points])
+    header_sizes[constants.ProblemHeaders.POINTS.value] = max(len(str(max_points)),
+                                              header_sizes[constants.ProblemHeaders.POINTS.value])
     return header_sizes
 
 
 def compare_problem_header_size(entry, headers):
-    headers[ProblemHeaders.NAME] = max(1 + entry[ProblemFileStruct.NAME],
-                                       headers[ProblemHeaders.NAME])
-    headers[ProblemHeaders.BIG_O] = max(4 + entry[ProblemFileStruct.COMPLEXITY],
-                                       headers[ProblemHeaders.BIG_O])
-    headers[ProblemHeaders.LANGUAGE] = max(1 + entry[ProblemFileStruct.LANGUAGE],
-                                       headers[ProblemHeaders.LANGUAGE])
+    headers[constants.ProblemHeaders.NAME.value] = max(2 + len(entry[constants.ProblemFileStruct.NAME.value]),
+                                       headers[constants.ProblemHeaders.NAME.value])
+    headers[constants.ProblemHeaders.BIG_O.value] = max(4 + len(entry[constants.ProblemFileStruct.COMPLEXITY.value]),
+                                       headers[constants.ProblemHeaders.BIG_O.value])
+    headers[constants.ProblemHeaders.LANGUAGE.value] = max(1 + len(entry[constants.ProblemFileStruct.LANGUAGE.value]),
+                                       headers[constants.ProblemHeaders.LANGUAGE.value])
     return headers
 
 
 def get_problem_leader_board_headers():
-    headers = ["" for _ in range(0, len(ProblemHeaders))]
-    headers[ProblemHeaders.RANK] = "Rank"
-    headers[ProblemHeaders.NAME] = "Name"
-    headers[ProblemHeaders.PERCENT] = "Percent"
-    headers[ProblemHeaders.BIG_O] = "Big O"
-    headers[ProblemHeaders.LANG] = "Language"
-    headers[ProblemHeaders.POINTS] = "Points"
+    headers = ["" for _ in range(0, len(constants.ProblemHeaders))]
+    headers[constants.ProblemHeaders.RANK.value] = "Rank"
+    headers[constants.ProblemHeaders.NAME.value] = "Name"
+    headers[constants.ProblemHeaders.PERCENT.value] = "Percent"
+    headers[constants.ProblemHeaders.BIG_O.value] = "Big O"
+    headers[constants.ProblemHeaders.LANGUAGE.value] = "Language"
+    headers[constants.ProblemHeaders.POINTS.value] = "Points"
     return headers
 
 
-def display_global_leader_board(message):
-    out = "Global Leaderboard:"
-    out += generate_global_leader_board_message()
-    reply_to_message(message, out)
+async def display_global_leader_board(message):
+    out = "Global Leaderboard:\n"
+    out += "```" + generate_global_leader_board_message() + "```"
+    await discord_funcs.reply_to_message(message, out)
 
 
 def generate_global_leader_board_message():
     leader_board = get_global_leader_board()
     leader_board = sort_global_leader_board(leader_board)
     headers = get_global_leader_board_headers()
-    header_sizes = get_global_leader_board_header_sizes(headers)
+    header_sizes = get_global_leader_board_header_sizes(headers, leader_board)
 
     table = create_global_header(headers, header_sizes)
     for i in range(0, len(leader_board)):
@@ -127,64 +127,73 @@ def generate_global_leader_board_message():
 def create_global_row(entry, header_sizes, rank):
     row = ""
 
-    body = str(rank) + " |"
-    row += add_padding(body, header_sizes[GlobalHeaders.RANK])
+    body = str(rank)
+    row += add_padding_left_align(body, header_sizes[constants.GlobalHeaders.RANK.value] - 2)
+    row += "| "
 
-    body = entry[GlobalLeaderboardStruct.NAME]
-    row += add_padding(body, header_sizes[GlobalHeaders.NAME])
+    body = entry[constants.GlobalLeaderboardStruct.NAME.value]
+    row += add_padding_center(body, header_sizes[constants.GlobalHeaders.NAME.value])
 
-    body = entry[GlobalLeaderboardStruct.POINTS]
-    row += add_padding(body, header_sizes[GlobalHeaders.POINTS])
+    body = format(entry[constants.GlobalLeaderboardStruct.POINTS.value], ".2f")
+    row += add_padding_center(body, header_sizes[constants.GlobalHeaders.POINTS.value])
 
-    body = entry[GlobalLeaderboardStruct.NO_PROBLEMS]
-    row += add_padding(body, header_sizes[GlobalHeaders.PROBLEMS_TRIED])
+    body = format(entry[constants.GlobalLeaderboardStruct.NO_PROBLEMS.value], ".0f")
+    row += add_padding_center(body, header_sizes[constants.GlobalHeaders.PROBLEMS_TRIED.value])
 
-    body = entry[GlobalLeaderboardStruct.AVERAGE_PERCENT]
-    row += add_padding(body, header_sizes[GlobalHeaders.AVERAGE_PERCENT])
+    body = format(entry[constants.GlobalLeaderboardStruct.AVERAGE_PERCENT.value], ".2f")
+    row += add_padding_center(body, header_sizes[constants.GlobalHeaders.AVERAGE_PERCENT.value])
 
     row += "\n"
     return row
 
 
+def add_padding_center(body, header_size):
+    (gap, offset) = divmod(header_size - len(body), 2)
+    return ' ' * (gap + offset) + body + ' ' * (gap + 1)
+
+
 def get_global_leader_board_headers():
-    headers = ["" for _ in range(0, len(GlobalHeaders))]
-    headers[GlobalHeaders.RANK] = "   |"
-    headers[GlobalHeaders.NAME] = "Name"
-    headers[GlobalHeaders.POINTS] = "Points"
-    headers[GlobalHeaders.PROBLEMS_TRIED] = "#Problems"
-    headers[GlobalHeaders.AVERAGE_PERCENT] = "Average %"
+    headers = ["" for _ in range(0, len(constants.GlobalHeaders))]
+    headers[constants.GlobalHeaders.RANK.value] = "R  |"
+    headers[constants.GlobalHeaders.NAME.value] = "Name"
+    headers[constants.GlobalHeaders.POINTS.value] = "Points"
+    headers[constants.GlobalHeaders.PROBLEMS_TRIED.value] = "#Problems"
+    headers[constants.GlobalHeaders.AVERAGE_PERCENT.value] = "Mean %"
     return headers
 
 
 def get_global_leader_board_header_sizes(headers, board):
-    header_sizes = [len(h) + 2 for h in headers]
-    header_sizes[GlobalHeaders.RANK] = 4
+    header_sizes = [len(h) + 3 for h in headers]
+    header_sizes[constants.GlobalHeaders.RANK.value] = len(headers[constants.GlobalHeaders.RANK.value])
     for entry in board:
-        header_sizes[GlobalHeaders.NAME] = max(header_sizes[GlobalHeaders.NAME],
-                                               1 + len(entry[GlobalLeaderboardStruct.NAME]))
-    max_points = max([b[GlobalLeaderboardStruct.POINTS] for b in board])
-    header_sizes[GlobalHeaders.POINTS] = max(header_sizes[GlobalHeaders.POINTS],
-                                             1 + len(str(max_points)))
-    max_problems = max(([b[GlobalLeaderboardStruct.NO_PROBLEMS] for b in board]))
-    header_sizes[GlobalHeaders.PROBLEMS_TRIED] = max(header_sizes[GlobalHeaders.PROBLEMS_TRIED],
-                                                     1 + len(str(max_problems)))
+        header_sizes[constants.GlobalHeaders.NAME.value] = max(header_sizes[constants.GlobalHeaders.NAME.value],
+                                                               1 + len(entry[constants.GlobalLeaderboardStruct.NAME.value]))
+    max_points = max([0] + [b[constants.GlobalLeaderboardStruct.POINTS.value] for b in board])
+    header_sizes[constants.GlobalHeaders.POINTS.value] = max(header_sizes[constants.GlobalHeaders.POINTS.value],
+                                                             1 + len(str(max_points)))
+    max_problems = max(([0] + [b[constants.GlobalLeaderboardStruct.NO_PROBLEMS.value] for b in board]))
+    header_sizes[constants.GlobalHeaders.PROBLEMS_TRIED.value] = max(header_sizes[constants.GlobalHeaders.PROBLEMS_TRIED.value],
+                                                                     1 + len(str(max_problems)))
     return header_sizes
 
 
 def create_global_header(headers, header_sizes):
-    header = headers[GlobalHeaders.RANK]
+    header = headers[constants.GlobalHeaders.RANK.value]
     for i in range(1, len(headers)):
         (gap, offset) = divmod(header_sizes[i] - len(headers[i]), 2)
-        header += ' ' * gap + headers[i] + ' ' * (gap + offset)
+        header += ' ' * (gap + offset) + headers[i] + ' ' * (gap + 1)
+    header += "\n" + '-' * len(header) + "\n"
     return header
 
 
 def save_global_board(board):
-    overwrite_rows(get_global_leader_board_file_name(), board)
+    csv_utils.overwrite_rows(get_global_leader_board_file_name(), board)
 
 
 def remove_attempt_global_leader_board(board, name, percent, points):
     user = get_user_entry_board(board, name)
+    if user == get_new_global_leader_board_entry(name):
+        return board
     new_user = remove_attempt_from_user(user, percent, points)
     new_board = replace_user_entry_board(board, new_user)
     sorted_board = sort_global_leader_board(new_board)
@@ -200,30 +209,30 @@ def add_attempt_global_leader_board(board, name, percent, points):
 
 
 def add_attempt_to_user(user, percent, points):
-    user[GlobalLeaderboardStruct.POINTS] += points
-    old_total_percent = user[GlobalLeaderboardStruct.AVERAGE_PERCENT] * user[GlobalLeaderboardStruct.NO_PROBLEMS]
+    user[constants.GlobalLeaderboardStruct.POINTS.value] += points
+    old_total_percent = user[constants.GlobalLeaderboardStruct.AVERAGE_PERCENT.value] * user[constants.GlobalLeaderboardStruct.NO_PROBLEMS.value]
     new_total_percent = old_total_percent + percent
-    new_percent = new_total_percent / (user[GlobalLeaderboardStruct.NO_PROBLEMS] + 1.0)
-    user[GlobalLeaderboardStruct.AVERAGE_PERCENT] = new_percent
-    user[GlobalLeaderboardStruct.NO_PROBLEMS] += 1
+    new_percent = new_total_percent / (user[constants.GlobalLeaderboardStruct.NO_PROBLEMS.value] + 1.0)
+    user[constants.GlobalLeaderboardStruct.AVERAGE_PERCENT.value] = new_percent
+    user[constants.GlobalLeaderboardStruct.NO_PROBLEMS.value] += 1
     return user
 
 
 def remove_attempt_from_user(user, percent, points):
-    user[GlobalLeaderboardStruct.POINTS] -= points
-    old_total_percent = user[GlobalLeaderboardStruct.AVERAGE_PERCENT] * user[GlobalLeaderboardStruct.NO_PROBLEMS]
+    user[constants.GlobalLeaderboardStruct.POINTS.value] -= points
+    old_total_percent = user[constants.GlobalLeaderboardStruct.AVERAGE_PERCENT.value] * user[constants.GlobalLeaderboardStruct.NO_PROBLEMS.value]
     new_total_percent = old_total_percent - percent
+    user[constants.GlobalLeaderboardStruct.NO_PROBLEMS.value] -= 1
     try:
-        new_percent = new_total_percent / (user[GlobalLeaderboardStruct.NO_PROBLEMS])
+        new_percent = new_total_percent / float(user[constants.GlobalLeaderboardStruct.NO_PROBLEMS.value])
     except ZeroDivisionError:
         new_percent = 0
-    user[GlobalLeaderboardStruct.AVERAGE_PERCENT] = new_percent
-    user[GlobalLeaderboardStruct.NO_PROBLEMS] -= 1
+    user[constants.GlobalLeaderboardStruct.AVERAGE_PERCENT.value] = new_percent
     return user
 
 
 def get_user_entry_board(board, name):
-    entries = [b for b in board if b[GlobalLeaderboardStruct.NAME] == name]
+    entries = [b for b in board if b[constants.GlobalLeaderboardStruct.NAME.value] == name]
     if len(entries) != 0:
         return entries[0]
     else:
@@ -232,10 +241,12 @@ def get_user_entry_board(board, name):
 
 def replace_user_entry_board(board, new_version):
     for i in range(0, len(board)):
-        if board[i][GlobalLeaderboardStruct.NAME] == new_version[GlobalLeaderboardStruct.NAME]:
+        if board[i][constants.GlobalLeaderboardStruct.NAME.value] == new_version[constants.GlobalLeaderboardStruct.NAME.value]:
             board[i] = new_version
             return board
-        return board
+    # Means it's a new user
+    board.append(new_version)
+    return board
 
 
 def get_new_global_leader_board_entry(name):
@@ -244,17 +255,21 @@ def get_new_global_leader_board_entry(name):
 
 # Assumes problem_id exists
 def get_problem_leader_board(problem_id):
-    attempts = get_attempts(problem_id)
+    attempts = problem_files.get_attempts(problem_id)
     return sort_problem_leader_board(attempts)
 
 
 def sort_problem_leader_board(attempts):
-    attempts.sort(key=lambda x: x[ProblemFileStruct.PERCENT])
+    if len(attempts) == 0:
+        return attempts
+    attempts.sort(key=lambda x: x[constants.ProblemFileStruct.PERCENT.value])
     return attempts
 
 
 def sort_global_leader_board(leader_board):
-    leader_board.sort(key=lambda x: (x[GlobalLeaderboardStruct.POINTS], x[GlobalLeaderboardStruct.AVERAGE_PERCENT]))
+    if len(leader_board) == 0:
+        return leader_board
+    leader_board.sort(key=lambda x: (x[constants.GlobalLeaderboardStruct.POINTS.value], x[constants.GlobalLeaderboardStruct.AVERAGE_PERCENT.value]))
     return leader_board
 
 
@@ -264,13 +279,13 @@ def calculate_points(attempts, diff):
     filtered_attempts = remove_same_percents(attempts)
     positions = {}
     for i in range(0, len(filtered_attempts)):
-        positions[filtered_attempts[i][ProblemFileStruct.PERCENT]] = i
+        positions[filtered_attempts[i][constants.ProblemFileStruct.PERCENT.value]] = i
     result = {}
     for user in attempts:
         position_points = (len(filtered_attempts) -
-                           positions[user[ProblemFileStruct.PERCENT]])
-        points = position_points * DIFFICULTY_MULTIPLIER[diff]
-        result[user[ProblemFileStruct.NAME]] = points
+                           positions[user[constants.ProblemFileStruct.PERCENT.value]])
+        points = position_points * constants.DIFFICULTY_MULTIPLIER[diff]
+        result[user[constants.ProblemFileStruct.NAME.value]] = points
 
     return result
 
@@ -279,18 +294,23 @@ def remove_same_percents(attempts):
     seen = set()
     result = []
     for a in attempts:
-        if a[ProblemFileStruct.PERCENT] not in seen:
+        if a[constants.ProblemFileStruct.PERCENT.value] not in seen:
             result.append(a)
-            seen.add(a[ProblemFileStruct.PERCENT])
+            seen.add(a[constants.ProblemFileStruct.PERCENT.value])
     return result
 
 
 def get_global_leader_board():
     try:
-        return read_csv(get_global_leader_board_file_name())
+        board = csv_utils.read_csv(get_global_leader_board_file_name())
+        for i in range(0, len(board)):
+            board[i][constants.GlobalLeaderboardStruct.POINTS.value] = float(board[i][constants.GlobalLeaderboardStruct.POINTS.value])
+            board[i][constants.GlobalLeaderboardStruct.NO_PROBLEMS.value] = int(board[i][constants.GlobalLeaderboardStruct.NO_PROBLEMS.value])
+            board[i][constants.GlobalLeaderboardStruct.AVERAGE_PERCENT.value] = float(board[i][constants.GlobalLeaderboardStruct.AVERAGE_PERCENT.value])
+        return board
     except FileNotFoundError:
-        create_leaderboard()
-        get_global_leader_board()
+        init.create_leaderboard()
+        return get_global_leader_board()
 
 
 def get_global_leader_board_file_name():

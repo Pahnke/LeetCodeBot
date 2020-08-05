@@ -3,10 +3,13 @@
 
 # PyCharm
 .idea/
-__pychace__/
+src/__pycache__/
 
 # Token for running bot
 token.txt
 
 # Data generated & stored
-src/data
+src/data/
+
+# Used as a test script file
+src/DELETEME.py

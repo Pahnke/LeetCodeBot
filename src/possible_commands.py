@@ -1,11 +1,9 @@
-from interface import implements, Interface
-from problem_files import *
-from problems_table import *
-from help import *
-from process_leaderboard import *
-from discord_funcs import get_username
-from error_messages import error_problem_does_not_exist
-from casting_funcs import *
+from implements import Interface, implements
+import problems_table
+import problem_files
+import help
+import process_leaderboard
+import discord_funcs
 import casting_funcs
 import constants
 import enum
@@ -17,20 +15,25 @@ class CommandFace(Interface):
     def command_title(self):
         # "!command"
         pass
+
     def no_args(self):
         # [0, 1, 2]
         pass
+
     def cast_arg_funcs(self):
         # [[], [cast_str], [cast_str, cast_percent]]
         # If invalid type, cast_func's should throw a ValueError
         pass
-    def command_args(self):
-        # "arg1, arg2"
+
+    def command_format(self):
+        # "!command arg1, arg2"
         pass
+
     def process(self, message, args):
         # The function wanted to be called
         # when the command is sent
         pass
+
     def help_message(self):
         # An explanation about what the function does
         # and how to use it
@@ -38,7 +41,8 @@ class CommandFace(Interface):
 
 
 # !add {difficulty}, {name}, {url}
-class Add(CommandFace):
+@implements(CommandFace)
+class Add:
     def command_title(self):
         return "!add"
 
@@ -46,20 +50,20 @@ class Add(CommandFace):
         return [3]
 
     def cast_arg_funcs(self):
-        return [[cast_difficulty,
-                 cast_str,
-                 cast_str]]
+        return [[casting_funcs.cast_difficulty,
+                 casting_funcs.cast_str,
+                 casting_funcs.cast_str]]
 
     def command_format(self):
         return "!add {difficulty}, {name}, {url}"
 
-    def process(self, message, args):
+    async def process(self, message, args):
         # args = ["difficulty", "name", "url"]
-        new_id = get_unused_problem_id()
+        new_id = problems_table.get_unused_problem_id()
         # Adding it to the problem table
-        add_problem_problems_table(new_id, args[0], args[1], args[2], True)
-        create_problem_file(new_id)
-        display_successful_problem_add(message)
+        problems_table.add_problem_problems_table(new_id, args[0], args[1], args[2], True)
+        problem_files.create_problem_file(new_id)
+        await problems_table.display_successful_problem_add(message, new_id)
 
     def help_message(self):
         out = "Used to add a new problem to the list of problems"
@@ -67,7 +71,8 @@ class Add(CommandFace):
 
 
 # !delete {problem ID}
-class Delete(CommandFace):
+@implements(CommandFace)
+class Delete:
     def command_title(self):
         return "!delete"
 
@@ -75,34 +80,36 @@ class Delete(CommandFace):
         return [1]
 
     def cast_arg_funcs(self):
-        return [[cast_int]]
+        return [[casting_funcs.cast_int]]
 
     def command_format(self):
         return "!delete {problem ID}"
 
-    def process(self, message, args):
+    async def process(self, message, args):
         # args = [problem ID]
         problem_id = args[0]
-        if not problem_id_exists(problem_id):
-            error_problem_does_not_exist(message, problem_id)
+        if not problems_table.problem_id_exists(problem_id):
+            import error_messages
+            await error_messages.error_problem_does_not_exist(message, problem_id)
         # Updates score on leaderboard as well
-        delete_problem_file(problem_id)
-        remove_problem_from_problem_table(problem_id)
-        display_successful_problem_removal(message, problem_id)
+        problem_files.delete_problem_file(problem_id)
+        problems_table.remove_problem_from_problem_table(problem_id)
+        await problems_table.display_successful_problem_removal(message, problem_id)
 
     def help_message(self):
         out = "Used to delete a problem from the list of problems."
         out += " However most of the time this command shouldn't be required"
         out += " as problems are automatically made inactive once "
-        out += str(NO_PLAYERS)
+        out += str(constants.NO_PLAYERS)
         out += " or more players have attempted the problem and got at least "
-        out += str(MIN_PERCENT)
+        out += str(constants.MIN_PERCENT)
         out += "% on it"
         return out
 
 
 # !attempt {problem ID}, {better %}, {big O}, {language}
-class Attempt(CommandFace):
+@implements(CommandFace)
+class Attempt:
     def command_title(self):
         return "!attempt"
 
@@ -110,32 +117,34 @@ class Attempt(CommandFace):
         return [4]
 
     def cast_arg_funcs(self):
-        return [[cast_int, cast_percent, cast_big_o, cast_str]]
+        return [[casting_funcs.cast_int, casting_funcs.cast_percent, casting_funcs.cast_big_o, casting_funcs.cast_str]]
 
     def command_format(self):
         return "!attempt {problem ID}, {better %}, {big O}, {language}"
 
-    def process(self, message, args):
+    async def process(self, message, args):
         # args - [problem ID, better %, Big O, Language]
         problem_id = args[0]
-        if not problem_id_exists(problem_id):
-            error_problem_does_not_exist(message, problem_id)
-        username = get_username(message)
+        if not problems_table.problem_id_exists(problem_id):
+            import error_messages
+            await error_messages.error_problem_does_not_exist(message, problem_id)
+        username = discord_funcs.get_username(message)
         # Deletes old one, updates global leaderboard as well
-        update_attempt_to_problem_file(username, args[0], args[1], args[2], args[3])
-        display_problem_leader_board(message, problem_id)
+        await problem_files.update_attempt_to_problem_file(message, username, args[0], args[1], args[2], args[3])
+        await process_leaderboard.display_problem_leader_board(message, problem_id)
 
     def help_message(self):
         out = "Used to submit an attempt at a problem."
         out += " Get the problem ID for a problem by typing "
-        out += Commands.problems.command_title()
+        out += UserCommands.problems.value.command_title()
         return out
 
 
 # !leaderboard
 # !leaderboard {problem ID}
 # !leaderboard -1
-class Leaderboard(CommandFace):
+@implements(CommandFace)
+class Leaderboard:
     def command_title(self):
         return "!leaderboard"
 
@@ -143,24 +152,25 @@ class Leaderboard(CommandFace):
         return [0, 1]
 
     def cast_arg_funcs(self):
-        return [[], [cast_int]]
+        return [[], [casting_funcs.cast_int]]
 
     def command_format(self):
         return "!leaderboard {problem ID}?"
 
-    def process(self, message, args):
+    async def process(self, message, args):
         # args = [(problem ID || -1)?]
         if len(args) == 0:
-            display_global_leader_board(message)
+            await process_leaderboard.display_global_leader_board(message)
         elif args[0] == constants.ALL_ID:
-            active_problem_ids = get_active_ids()
+            active_problem_ids = problems_table.get_active_ids()
             for problem_id in active_problem_ids:
-                display_problem_leader_board(message, problem_id)
+                await process_leaderboard.display_problem_leader_board(message, problem_id)
         else:
-            if not problem_id_exists(args[0]):
-                error_problem_does_not_exist(message, args[0])
+            if not problems_table.problem_id_exists(args[0]):
+                import error_messages
+                await error_messages.error_problem_does_not_exist(message, args[0])
                 return
-            display_problem_leader_board(message, args[0])
+            await process_leaderboard.display_problem_leader_board(message, args[0])
 
     def help_message(self):
         out = "Used to display one of the leaderboards."
@@ -173,7 +183,8 @@ class Leaderboard(CommandFace):
 # !problems
 # !problems {problem ID}
 # !problems -1
-class Problems(CommandFace):
+@implements(CommandFace)
+class Problems:
     def command_title(self):
         return "!problems"
 
@@ -181,33 +192,45 @@ class Problems(CommandFace):
         return [0, 1]
 
     def cast_arg_funcs(self):
-        return [[], [cast_int]]
+        return [[], [casting_funcs.cast_int]]
 
     def command_format(self):
         return "!problems {problem ID}?"
 
-    def process(self, message, args):
+    async def process(self, message, args):
         # args = [(problem ID || -1)?]
         if len(args) == 0:
-            active_problems = get_active_problems()
-            out = "Here are the active problems: "
-            reply_to_message(message, out)
-            for problem in active_problems:
-                display_problem(message, problem)
-        elif args[0] == constants.ALL_ID:
-            all_problems = get_all_problems()
-            out = "Here are all of the problems: "
-            reply_to_message(message, out)
-            for problem in all_problems:
-                display_problem(message, problem)
-        else:
-            if not problem_id_exists(args[0]):
-                error_problem_does_not_exist(message, args[0])
+            active_problems = problems_table.get_active_problems()
+            if len(active_problems) == 0:
+                out = "There are currently no active problems"
+                await discord_funcs.reply_to_message(message, out)
                 return
-            problem = get_problem_table_problem_by_id(args[0])
+
+            out = "Here are the active problems: "
+            await discord_funcs.reply_to_message(message, out)
+            for problem in active_problems:
+                await problems_table.display_problem(message, problem)
+
+        elif args[0] == constants.ALL_ID:
+            all_problems = problems_table.get_all_problems()
+            if len(all_problems) == 0:
+                out = "There are currently no problems"
+                await discord_funcs.reply_to_message(message, out)
+                return
+
+            out = "Here are all of the problems: "
+            await discord_funcs.reply_to_message(message, out)
+            for problem in all_problems:
+                await problems_table.display_problem(message, problem)
+        else:
+            if not problems_table.problem_id_exists(args[0]):
+                import error_messages
+                await error_messages.error_problem_does_not_exist(message, args[0])
+                return
+            problem = problems_table.get_problem_table_problem_by_id(args[0])
             out = "Here is problem {}: ".format(args[0])
-            reply_to_message(message, out)
-            display_problem(message, problem)
+            await discord_funcs.reply_to_message(message, out)
+            await problems_table.display_problem(message, problem)
 
     def help_message(self):
         out = "Used to display the available problems."
@@ -220,7 +243,8 @@ class Problems(CommandFace):
 
 # !help
 # !help {command}?
-class Help(CommandFace):
+@implements(CommandFace)
+class Help:
     def command_title(self):
         return "!help"
 
@@ -228,27 +252,28 @@ class Help(CommandFace):
         return [0, 1]
 
     def cast_arg_funcs(self):
-        return [[], [cast_str]]
+        return [[], [casting_funcs.cast_str]]
 
     def command_format(self):
         return "!help {command}?"
 
-    def process(self, message, args):
+    async def process(self, message, args):
         # args = [(command)?]
         if len(args) == 0:
-            display_general_help(message)
+            await help.display_general_help(message)
         else:
-            for command in Commands:
-                if (args[0] == command.command_title() or
-                args[0] == command.command_title()[1:]):
-                    display_help_message(message, command)
+            for user_command in UserCommands:
+                uc_val = user_command.value
+                if (args[0] == uc_val.command_title() or
+                args[0] == uc_val.command_title()[1:]):
+                    await help.display_help_message(message, uc_val)
 
     def help_message(self):
         out = "Used to learn more about commands"
         return out
 
 
-class Commands(enum.Enum):
+class UserCommands(enum.Enum):
     add = Add()
     delete = Delete()
     attempt = Attempt()

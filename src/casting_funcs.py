@@ -1,24 +1,24 @@
-from constants import DIFFICULTY_MULTIPLIER
+import constants
 
 ''' CASTING FUNCS '''
 
 
 def cast_str(string):
-    r = ""
     try:
         r = str(string)
     except Exception as _:
-        raise ValueError("Can't convert {} to string".format(string))
+        raise ValueError("Can't convert \"{}\" to string".format(string))
+    if len(r.strip()) == 0:
+        raise ValueError("Arguments can't be empty")
+
     return r
 
 
 def cast_int(i):
-    r = 0
     try:
-        r = int(i)
+        return int(i)
     except Exception as _:
-        raise ValueError("Can't convert {} to int".format(i))
-    return r
+        raise ValueError("Can't convert \"{}\" to int".format(i))
 
 
 def cast_percent(percent):
@@ -31,7 +31,7 @@ def cast_percent(percent):
     try:
         r = float(i)
     except Exception as _:
-        raise ValueError("Can't convert {} to form float(%)?".format(percent))
+        raise ValueError("Can't convert \"{}\" to form float(%)?".format(percent))
     if r > 100.0:
         raise ValueError("Can't have over 100%")
     elif r < 0.0:
@@ -58,11 +58,19 @@ def cast_big_o(big_o):
 def cast_difficulty(diff):
     if len(diff) == 0:
         raise ValueError("Difficulty can't be empty")
-
+    input_diff = diff
     diff = diff.lower()
     diff = diff[0].upper() + diff[1:]
+
+    if diff == "E":
+        diff = "Easy"
+    elif diff == "M":
+        diff = "Medium"
+    elif diff == "H":
+        diff = "Hard"
+
     try:
-        a = DIFFICULTY_MULTIPLIER[diff]
+        a = constants.DIFFICULTY_MULTIPLIER[diff]
     except KeyError as _:
-        raise ValueError("Difficulty level: {} not recognised".format(diff))
+        raise ValueError("Difficulty level \"{}\" not recognised".format(input_diff))
     return diff

@@ -1,90 +1,97 @@
-from csv_utils import *
-from init import *
-from constants import ProblemTableStruct, ProblemFileStruct, \
-    NO_PLAYERS, MIN_PERCENT
-from discord_funcs import *
+import csv_utils
+import init
+import constants
+import discord_funcs
 
 ''' PROBLEMS TABLE '''
 # data/problems.csv
 # [id, name, difficulty, url, active]
 
 
-def display_problem(message, problem):
-    out = "[" + problem[ProblemTableStruct.ID] + "] "
-    out += problem[ProblemTableStruct.DIFFICULTY]
+async def display_problem(message, problem):
+    out = "[{}] ".format(problem[constants.ProblemTableStruct.ID.value])
+    out += problem[constants.ProblemTableStruct.DIFFICULTY.value]
     out += " - "
-    out += problem[ProblemTableStruct.NAME]
+    out += problem[constants.ProblemTableStruct.NAME.value]
     out += " - "
-    out += problem[ProblemTableStruct.URL]
-    reply_to_message(message, out)
+    out += problem[constants.ProblemTableStruct.URL.value]
+    await discord_funcs.reply_to_message(message, out)
 
 
-def display_successful_problem_add(message):
-    out = "Problem has successfully been added!"
-    reply_to_message(message, out)
+async def display_successful_problem_add(message, problem_id):
+    out = "Problem has successfully been added with ID: " + str(problem_id)
+    await discord_funcs.reply_to_message(message, out)
 
 
-def display_successful_problem_removal(message, problem_id):
+async def display_successful_problem_removal(message, problem_id):
     out = "Problem {} has successfully been removed".format(problem_id)
-    reply_to_message(message, out)
+    await discord_funcs.reply_to_message(message, out)
 
 
 def save_problem_table(table):
-    overwrite_rows(get_problem_table_file_name(), table)
+    csv_utils.overwrite_rows(get_problem_table_file_name(), table)
 
 
-def update_active_val(attempts, problem_id):
-    if len(attempts) < NO_PLAYERS:
+async def update_active_val(message, attempts, problem_id):
+    if len(attempts) < constants.NO_PLAYERS:
         return
     for a in attempts:
-        if a[ProblemFileStruct.PERCENT] < MIN_PERCENT:
+        if a[constants.ProblemFileStruct.PERCENT.value] < constants.MIN_PERCENT:
             return
     problems = get_problem_table()
+    prob_name = ""
     for p in problems:
-        if p[ProblemTableStruct.ID] == problem_id:
-            p[ProblemTableStruct.ACTIVE] = False
+        if p[constants.ProblemTableStruct.ID.value] == problem_id:
+            p[constants.ProblemTableStruct.ACTIVE.value] = False
+            prob_name = p[constants.ProblemTableStruct.NAME.value]
     save_problem_table(problems)
+    await display_problem_marked_inactive(message, problem_id, prob_name)
+
+
+async def display_problem_marked_inactive(message, problem_id, name):
+    out = "Problem {}: {} has now been made inactive.".format(problem_id, name)
+    await discord_funcs.reply_to_message(message, out)
 
 
 def add_problem_problems_table(problem_id, difficulty, name, url, active):
     new_entry = new_problem_table_entry(problem_id, difficulty, name, url, active)
-    append_row(get_problem_table_file_name(), new_entry)
+    csv_utils.append_row(get_problem_table_file_name(), new_entry)
 
 
 def remove_problem_from_problem_table(problem_id):
     problems = get_problem_table()
-    new_problems = [p for p in problems if p[ProblemTableStruct.ID] != problem_id]
+    new_problems = [p for p in problems if p[constants.ProblemTableStruct.ID.value] != problem_id]
     save_problem_table(new_problems)
 
 
 def new_problem_table_entry(problem_id, difficulty, name, url, active):
-    new_entry = ["" for _ in range(0, ProblemTableStruct)]
-    new_entry[ProblemTableStruct.ID] = problem_id
-    new_entry[ProblemTableStruct.DIFFICULTY] = difficulty
-    new_entry[ProblemTableStruct.NAME] = name
-    new_entry[ProblemTableStruct.URL] = url
-    new_entry[ProblemTableStruct.ACTIVE] = active
+    new_entry = ["" for _ in range(0, len(constants.ProblemTableStruct))]
+    new_entry[constants.ProblemTableStruct.ID.value] = problem_id
+    new_entry[constants.ProblemTableStruct.DIFFICULTY.value] = difficulty
+    new_entry[constants.ProblemTableStruct.NAME.value] = name
+    new_entry[constants.ProblemTableStruct.URL.value] = url
+    new_entry[constants.ProblemTableStruct.ACTIVE.value] = active
     return new_entry
 
 
 def problem_id_exists(problem_id):
     problems = get_problem_table()
-    return len([p for p in problems if p[ProblemTableStruct.ID] == problem_id]) == 1
+    return len([p for p in problems if p[constants.ProblemTableStruct.ID.value] == problem_id]) == 1
 
 
 def get_unused_problem_id():
     problems = get_problem_table()
-    return max([p[ProblemTableStruct.ID] for p in problems]) + 1
+    return max([p[constants.ProblemTableStruct.ID.value] for p in problems] + [constants.FIRST_ID]) + 1
 
 
 def get_active_ids():
     problems = get_problem_table()
-    return [p[ProblemTableStruct.ID] for p in problems if p[ProblemTableStruct.ACTIVE]]
+    return [p[constants.ProblemTableStruct.ID.value] for p in problems if p[constants.ProblemTableStruct.ACTIVE.value]]
 
 
 def get_active_problems():
     problems = get_problem_table()
-    return [p for p in problems if p[ProblemTableStruct.ACTIVE]]
+    return [p for p in problems if p[constants.ProblemTableStruct.ACTIVE.value] == "True"]
 
 
 def get_all_problems():
@@ -94,27 +101,30 @@ def get_all_problems():
 
 def get_difficulty(problem_id):
     problems = get_problem_table()
-    return [p[ProblemTableStruct.DIFFICULTY] for p in problems
-            if p[ProblemTableStruct.ID] == problem_id][0]
+    return [p[constants.ProblemTableStruct.DIFFICULTY.value] for p in problems
+            if p[constants.ProblemTableStruct.ID.value] == problem_id][0]
 
 
 def get_name(problem_id):
     problems = get_problem_table()
-    return [p[ProblemTableStruct.NAME] for p in problems
-            if p[ProblemTableStruct.ID] == problem_id][0]
+    return [p[constants.ProblemTableStruct.NAME.value] for p in problems
+            if p[constants.ProblemTableStruct.ID.value] == problem_id][0]
 
 
 # Assume problem is in problem table
 def get_problem_table_problem_by_id(problem_id):
     problems = get_problem_table()
-    return [p for p in problems if p[ProblemTableStruct.ID] == problem_id][0]
+    return [p for p in problems if p[constants.ProblemTableStruct.ID.value] == problem_id][0]
 
 
 def get_problem_table():
     try:
-        return read_csv(get_problem_table_file_name())
+        table = csv_utils.read_csv(get_problem_table_file_name())
+        for i in range(0, len(table)):
+            table[i][constants.ProblemTableStruct.ID.value] = int(table[i][constants.ProblemTableStruct.ID.value])
+        return table
     except FileNotFoundError:
-        create_problems_table()
+        init.create_problems_table()
         return get_problem_table()
 
 
