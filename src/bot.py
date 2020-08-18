@@ -15,6 +15,10 @@ Functions dealing with this are in: process_leaderboard.py
 data/problems.csv
 [id, name, difficulty, url, active]
 Functions dealing with this are in: problems_table.py
+
+data/names.csv
+[discord name, display name]
+Functions dealing with this are in: process_leaderboard.py
 '''
 
 
@@ -40,6 +44,7 @@ async def on_ready():
         init.create_problems_table()
         init.create_leaderboard()
         init.create_attempts_folder()
+        init.create_names_file()
     except Exception as exc:
         print("Error while initialising: ")
         print(str(exc))

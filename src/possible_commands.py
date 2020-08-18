@@ -272,6 +272,29 @@ class Help:
         out = "Used to learn more about commands"
         return out
 
+# !rename {new name}
+@implements(CommandFace)
+class Rename:
+    def command_title(self):
+        return "!rename"
+
+    def no_args(self):
+        return [1]
+
+    def cast_arg_funcs(self):
+        return [[casting_funcs.cast_str]]
+
+    def command_format(self):
+        return "!rename {new name}"
+
+    async def process(self, message, args):
+        # args = ["newName"]
+        process_leaderboard.add_new_display_name(message, args[0])
+
+    def help_message(self):
+        out = "Used to change name displayed on leaderboard."
+        return out
+
 
 class UserCommands(enum.Enum):
     add = Add()
@@ -280,3 +303,4 @@ class UserCommands(enum.Enum):
     leaderboard = Leaderboard()
     problems = Problems()
     help = Help()
+    rename = Rename()

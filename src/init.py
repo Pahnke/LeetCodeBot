@@ -41,3 +41,12 @@ def create_attempts_folder():
         create_attempts_folder()
     except FileExistsError:
         return
+
+
+def create_names_file():
+    try:
+        Path(process_leaderboard.get_names_file_file_name()).touch()
+    except FileNotFoundError:
+        create_data_folder()
+    except FileExistsError:
+        return
