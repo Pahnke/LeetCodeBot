@@ -24,7 +24,7 @@ def generate_problem_leader_board_message(problem_id):
     points = calculate_points(attempts, problems_table.get_difficulty(problem_id))
     names = get_display_names()
     headers = get_problem_leader_board_headers()
-    header_sizes = get_problem_leader_board_header_sizes(headers, attempts, points)
+    header_sizes = get_problem_leader_board_header_sizes(headers, attempts, points, names)
     table = create_problem_header(headers, header_sizes)
     rank = 1
     for i in range(0, len(attempts) - 1):
@@ -83,11 +83,11 @@ def add_padding_left_align(body, header_size):
     return body + ' ' * (1 + header_size - len(body))
 
 
-def get_problem_leader_board_header_sizes(headers, attempts, points):
+def get_problem_leader_board_header_sizes(headers, attempts, points, names):
     header_sizes = [len(h) + 3 for h in headers]
     header_sizes[constants.ProblemHeaders.POINTS.value] = 1 + len(headers[constants.ProblemHeaders.POINTS.value])
     for a in attempts:
-        header_sizes = compare_problem_header_size(a, header_sizes)
+        header_sizes = compare_problem_header_size(a, header_sizes, names)
 
     max_points = max([0] + [points[name] for name in points])
     header_sizes[constants.ProblemHeaders.POINTS.value] = max(len(str(max_points)),
@@ -95,9 +95,12 @@ def get_problem_leader_board_header_sizes(headers, attempts, points):
     return header_sizes
 
 
-def compare_problem_header_size(entry, headers):
-    headers[constants.ProblemHeaders.NAME.value] = max(2 + len(entry[constants.ProblemFileStruct.NAME.value]),
-                                                       headers[constants.ProblemHeaders.NAME.value])
+def compare_problem_header_size(entry, headers, names):
+    headers[constants.ProblemHeaders.NAME.value] = \
+        max(2 + len(get_display_name(names,
+                                     entry[
+                                         constants.ProblemFileStruct.NAME.value])),
+            headers[constants.ProblemHeaders.NAME.value])
     headers[constants.ProblemHeaders.BIG_O.value] = max(4 + len(entry[constants.ProblemFileStruct.COMPLEXITY.value]),
                                                         headers[constants.ProblemHeaders.BIG_O.value])
     headers[constants.ProblemHeaders.LANGUAGE.value] = max(1 + len(entry[constants.ProblemFileStruct.LANGUAGE.value]),
@@ -127,7 +130,7 @@ def generate_global_leader_board_message():
     leader_board = sort_global_leader_board(leader_board)
     names = get_display_names()
     headers = get_global_leader_board_headers()
-    header_sizes = get_global_leader_board_header_sizes(headers, leader_board)
+    header_sizes = get_global_leader_board_header_sizes(headers, leader_board, names)
 
     table = create_global_header(headers, header_sizes)
     rank = 1
@@ -187,13 +190,15 @@ def get_global_leader_board_headers():
     return headers
 
 
-def get_global_leader_board_header_sizes(headers, board):
+def get_global_leader_board_header_sizes(headers, board, names):
     header_sizes = [len(h) + 3 for h in headers]
     header_sizes[constants.GlobalHeaders.RANK.value] = len(headers[constants.GlobalHeaders.RANK.value])
     for entry in board:
         header_sizes[constants.GlobalHeaders.NAME.value] = max(header_sizes[constants.GlobalHeaders.NAME.value],
-                                                               1 + len(
-                                                                   entry[constants.GlobalLeaderboardStruct.NAME.value]))
+                                                               1 + len(get_display_name(names,
+                                                                                        entry[
+                                                                                            constants.GlobalLeaderboardStruct.NAME.value])))
+
     max_points = max([0] + [b[constants.GlobalLeaderboardStruct.POINTS.value] for b in board])
     header_sizes[constants.GlobalHeaders.POINTS.value] = max(header_sizes[constants.GlobalHeaders.POINTS.value],
                                                              1 + len(str(max_points)))
