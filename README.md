@@ -26,6 +26,6 @@ A discord bot to generate competition to complete LeetCode problems
 
 `!help {command}` - Displayes a help message about for the command
 
-`!rename {display name}` - Sets the users name when displaying leaderboards to the display name
+`!rename {display name}` - Sets the user's name when displaying leaderboards to the display name
 
-`!rename` - Clears the users display name
+`!rename` - Clears the user's display name
