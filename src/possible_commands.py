@@ -270,30 +270,39 @@ class Help:
 
     def help_message(self):
         out = "Used to learn more about commands."
-        out += " The maximum name length is {}.".format(constants.MAX_DISPLAY_NAME)
         return out
 
-# !rename {new name}
+
+# !rename {new name}?
 @implements(CommandFace)
 class Rename:
     def command_title(self):
         return "!rename"
 
     def no_args(self):
-        return [1]
+        return [0, 1]
 
     def cast_arg_funcs(self):
-        return [[casting_funcs.cast_display_name]]
+        return [[], [casting_funcs.cast_display_name]]
 
     def command_format(self):
-        return "!rename {new name}"
+        return "!rename {new name}?"
 
     async def process(self, message, args):
-        # args = ["newName"]
-        process_leaderboard.add_new_display_name(message, args[0])
+        # args = [(new name)?]
+        if len(args) == 1:
+            new_name = args[0]
+            process_leaderboard.add_new_display_name(message, new_name)
+            await process_leaderboard.display_successful_name_update(message, new_name)
+        else:
+            process_leaderboard.clear_display_name(message)
+            await process_leaderboard.display_successful_clear_name(message)
 
     def help_message(self):
         out = "Used to change name displayed on leaderboard."
+        out += " The maximum name length is {}.".format(constants.MAX_DISPLAY_NAME)
+        out += " To remove your display name and use your default name"
+        out += "use {} with no arguments.".format(UserCommands.rename.value.command_title())
         return out
 
 

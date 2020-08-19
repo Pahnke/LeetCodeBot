@@ -10,8 +10,11 @@ async def split_args(message, command):
     comma_args = message.content.split(',')
     first_arg = comma_args[0].split(' ')
     args = []
-    if len(first_arg) == 2:
-        args.append(first_arg[1])
+    if len(first_arg) >= 2:
+        temp = ""
+        for a in first_arg[1:]:
+            temp += a + " "
+        args.append(temp)
     args += comma_args[1:]
     args = [a.strip() for a in args]
     valid = False

@@ -133,7 +133,8 @@ def generate_global_leader_board_message():
     rank = 1
     for i in range(0, len(leader_board) - 1):
         table += create_global_row(leader_board[i], header_sizes, rank,
-                                   get_display_name(names, leader_board[i][constants.GlobalLeaderboardStruct.NAME.value]))
+                                   get_display_name(names,
+                                                    leader_board[i][constants.GlobalLeaderboardStruct.NAME.value]))
         if (leader_board[i][constants.GlobalLeaderboardStruct.POINTS.value]
                 != leader_board[i + 1][constants.GlobalLeaderboardStruct.POINTS.value] or
                 leader_board[i][constants.GlobalLeaderboardStruct.AVERAGE_PERCENT.value] !=
@@ -299,7 +300,8 @@ def sort_global_leader_board(leader_board):
     if len(leader_board) == 0:
         return leader_board
     leader_board.sort(key=lambda x: (
-    -x[constants.GlobalLeaderboardStruct.POINTS.value], -x[constants.GlobalLeaderboardStruct.AVERAGE_PERCENT.value]))
+        -x[constants.GlobalLeaderboardStruct.POINTS.value],
+        -x[constants.GlobalLeaderboardStruct.AVERAGE_PERCENT.value]))
     return leader_board
 
 
@@ -349,16 +351,39 @@ def get_global_leader_board():
 def add_new_display_name(message, display_name):
     names = get_display_names()
     discord_name = discord_funcs.get_username(message)
-    removed_old = [n for n in names if n[0] != discord_name]
+    removed_old = remove_display_name_from_names(discord_name, names)
     removed_old.append([discord_name, display_name])
     save_display_names(removed_old)
 
 
+def remove_display_name_from_names(discord_name, names):
+    return [n for n in names if n[constants.NameFileStruct.DISCORD_NAME.value] != discord_name]
+
+
+def clear_display_name(message):
+    names = get_display_names()
+    discord_name = discord_funcs.get_username(message)
+    new_names = remove_display_name_from_names(discord_name, names)
+    save_display_names(new_names)
+
+
+async def display_successful_clear_name(message):
+    out = "Successfully cleared {}'s display name".format(
+        discord_funcs.get_username(message)[:-constants.DISCORD_HASH_LENGTH])
+    await discord_funcs.reply_to_message(message, out)
+
+
+async def display_successful_name_update(message, new_name):
+    out = "Successfully changed {}'s display name to {}".format(discord_funcs.get_username(message), new_name)
+    await discord_funcs.reply_to_message(message, out)
+
+
 def get_display_name(names, discord_name):
-    possible_name = [n for n in names if n[0] == discord_name]
+    possible_name = [n[constants.NameFileStruct.DISPLAY_NAME.value] for n in names
+                     if n[constants.NameFileStruct.DISCORD_NAME.value] == discord_name]
     if len(possible_name) == 1:
         return possible_name[0]
-    return discord_name[:-5]
+    return discord_name[: -constants.DISCORD_HASH_LENGTH]
 
 
 def get_display_names():
