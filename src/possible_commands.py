@@ -269,7 +269,8 @@ class Help:
                     await help.display_help_message(message, uc_val)
 
     def help_message(self):
-        out = "Used to learn more about commands"
+        out = "Used to learn more about commands."
+        out += " The maximum name length is {}.".format(constants.MAX_DISPLAY_NAME)
         return out
 
 # !rename {new name}
@@ -282,7 +283,7 @@ class Rename:
         return [1]
 
     def cast_arg_funcs(self):
-        return [[casting_funcs.cast_str]]
+        return [[casting_funcs.cast_display_name]]
 
     def command_format(self):
         return "!rename {new name}"

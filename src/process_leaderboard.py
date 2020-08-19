@@ -358,7 +358,7 @@ def get_display_name(names, discord_name):
     possible_name = [n for n in names if n[0] == discord_name]
     if len(possible_name) == 1:
         return possible_name[0]
-    return discord_name
+    return discord_name[:-5]
 
 
 def get_display_names():

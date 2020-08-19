@@ -74,3 +74,9 @@ def cast_difficulty(diff):
     except KeyError as _:
         raise ValueError("Difficulty level \"{}\" not recognised".format(input_diff))
     return diff
+
+
+def cast_display_name(name):
+    if len(name) > constants.MAX_DISPLAY_NAME:
+        raise ValueError("Name can't be longer than {}".format(constants.MAX_DISPLAY_NAME))
+    return cast_str(name)

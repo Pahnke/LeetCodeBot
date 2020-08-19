@@ -55,6 +55,10 @@ FIRST_ID = 0
 NO_PLAYERS = 5
 MIN_PERCENT = 45.0
 
+# Maximum name length that
+# is displayed in on the leaderboard
+MAX_DISPLAY_NAME = 16
+
 # Maximum no chars in a message
 # that discord can send
 MAX_MESSAGE_SIZE = 2000
