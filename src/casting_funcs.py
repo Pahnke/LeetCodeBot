@@ -78,5 +78,5 @@ def cast_difficulty(diff):
 
 def cast_display_name(name):
     if len(name) > constants.MAX_DISPLAY_NAME:
-        raise ValueError("Name can't be longer than {}".format(constants.MAX_DISPLAY_NAME))
+        raise ValueError("Name can't be longer than {} characters".format(constants.MAX_DISPLAY_NAME))
     return cast_str(name)

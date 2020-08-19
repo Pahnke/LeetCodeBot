@@ -273,7 +273,7 @@ class Help:
         return out
 
 
-# !rename {new name}?
+# !rename {display name}?
 @implements(CommandFace)
 class Rename:
     def command_title(self):
@@ -286,10 +286,10 @@ class Rename:
         return [[], [casting_funcs.cast_display_name]]
 
     def command_format(self):
-        return "!rename {new name}?"
+        return "!rename {display name}?"
 
     async def process(self, message, args):
-        # args = [(new name)?]
+        # args = [(display name)?]
         if len(args) == 1:
             new_name = args[0]
             process_leaderboard.add_new_display_name(message, new_name)
@@ -302,7 +302,7 @@ class Rename:
         out = "Used to change name displayed on leaderboard."
         out += " The maximum name length is {}.".format(constants.MAX_DISPLAY_NAME)
         out += " To remove your display name and use your default name"
-        out += "use {} with no arguments.".format(UserCommands.rename.value.command_title())
+        out += " use {} with no arguments.".format(UserCommands.rename.value.command_title())
         return out
 
 
