@@ -7,16 +7,23 @@ import discord_funcs
 # data/problems.csv
 # [id, name, difficulty, url, active]
 
-
-async def display_problem(message, problem):
+def show_problem(problem):
     out = "[{}] ".format(problem[constants.ProblemTableStruct.ID.value])
     out += problem[constants.ProblemTableStruct.DIFFICULTY.value]
     out += " - "
     out += problem[constants.ProblemTableStruct.NAME.value]
     out += " - "
     out += "<" + problem[constants.ProblemTableStruct.URL.value] + ">"
-    await discord_funcs.reply_to_message(message, out)
+    return out
 
+def show_problems(problems):
+    return "\n".join( show_problem(p) for p in problems )
+
+async def send_problem(message, problem):
+    await discord_funcs.reply_to_message(message, show_problem(problem))
+
+async def send_problems(message, problems):
+    await discord_funcs.reply_to_message(message, show_problems(problems))
 
 async def display_successful_problem_add(message, problem_id):
     out = "Problem has successfully been added with ID: " + str(problem_id)

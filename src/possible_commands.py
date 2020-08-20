@@ -208,8 +208,7 @@ class Problems:
 
             out = "Here are the active problems: "
             await discord_funcs.reply_to_message(message, out)
-            for problem in active_problems:
-                await problems_table.display_problem(message, problem)
+            await problems_table.send_problems(message, active_problems)
 
         elif args[0] == constants.ALL_ID:
             all_problems = problems_table.get_all_problems()
@@ -220,8 +219,7 @@ class Problems:
 
             out = "Here are all of the problems: "
             await discord_funcs.reply_to_message(message, out)
-            for problem in all_problems:
-                await problems_table.display_problem(message, problem)
+            await problems_table.send_problems(message, all_problems)
         else:
             if not problems_table.problem_id_exists(args[0]):
                 import error_messages
@@ -230,7 +228,7 @@ class Problems:
             problem = problems_table.get_problem_table_problem_by_id(args[0])
             out = "Here is problem {}: ".format(args[0])
             await discord_funcs.reply_to_message(message, out)
-            await problems_table.display_problem(message, problem)
+            await problems_table.send_problem(message, problem)
 
     def help_message(self):
         out = "Used to display the available problems."
