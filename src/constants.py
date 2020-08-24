@@ -67,8 +67,7 @@ ALL_ID = -1
 FIRST_ID = 0
 
 # Checking if active
-#TODO
-NO_PLAYERS = 2
+NO_PLAYERS = 5
 MIN_PERCENT = 45.0
 
 # Maximum name length that
