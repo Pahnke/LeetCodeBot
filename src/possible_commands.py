@@ -333,6 +333,10 @@ class Forfeit:
     def help_message(self):
         out = "Used to \"forfeit\" a problem so an attempt from the user isn't required"
         out += " for the problem to be made inactive."
+        out += " You can still attempt a problem which you have forfeited"
+        out += " and you can forfeit a problem you have already attempted."
+        out += " Forfeiting a problem you have already attempted will remove"
+        out += " the previous attempt."
         return out
 
 
