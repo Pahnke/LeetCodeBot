@@ -88,4 +88,3 @@ DIFFICULTY_MULTIPLIER = {
     "Medium": 1.5,
     "Hard": 2.0,
 }
-

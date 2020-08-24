@@ -264,7 +264,7 @@ class Help:
             for user_command in UserCommands:
                 uc_val = user_command.value
                 if (args[0] == uc_val.command_title() or
-                args[0] == uc_val.command_title()[1:]):
+                        args[0] == uc_val.command_title()[1:]):
                     await help.display_help_message(message, uc_val)
 
     def help_message(self):

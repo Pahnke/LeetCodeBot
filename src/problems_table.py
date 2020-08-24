@@ -4,8 +4,11 @@ import constants
 import discord_funcs
 
 ''' PROBLEMS TABLE '''
+
+
 # data/problems.csv
 # [id, name, difficulty, url, active]
+
 
 def show_problem(problem):
     out = "[{}] ".format(problem[constants.ProblemTableStruct.ID.value])
@@ -16,14 +19,18 @@ def show_problem(problem):
     out += "<" + problem[constants.ProblemTableStruct.URL.value] + ">"
     return out
 
+
 def show_problems(problems):
-    return "\n".join( show_problem(p) for p in problems )
+    return "\n".join(show_problem(p) for p in problems)
+
 
 async def send_problem(message, problem):
     await discord_funcs.reply_to_message(message, show_problem(problem))
 
+
 async def send_problems(message, problems):
     await discord_funcs.reply_to_message(message, show_problems(problems))
+
 
 async def display_successful_problem_add(message, problem_id):
     out = "Problem has successfully been added with ID: " + str(problem_id)
