@@ -19,7 +19,7 @@ async def display_problem_leader_board(message, problem_id):
 
 
 def generate_problem_leader_board_message(problem_id):
-    attempts = problem_files.get_attempts(problem_id)
+    attempts = problem_files.get_non_forfeit_attempts(problem_id)
     attempts = sort_problem_leader_board(attempts)
     points = calculate_points(attempts, problems_table.get_difficulty(problem_id))
     names = get_display_names()
@@ -290,7 +290,7 @@ def get_new_global_leader_board_entry(name):
 
 # Assumes problem_id exists
 def get_problem_leader_board(problem_id):
-    attempts = problem_files.get_attempts(problem_id)
+    attempts = problem_files.get_non_forfeit_attempts(problem_id)
     return sort_problem_leader_board(attempts)
 
 
@@ -313,6 +313,7 @@ def sort_global_leader_board(leader_board):
 # Returns {name: points}
 def calculate_points(attempts, diff):
     attempts = sort_problem_leader_board(attempts)
+    attempts = problem_files.filter_forfeits_out(attempts)
     filtered_attempts = remove_same_percents(attempts)
     positions = {}
     for i in range(0, len(filtered_attempts)):

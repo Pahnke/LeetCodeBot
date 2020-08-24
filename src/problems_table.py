@@ -40,19 +40,25 @@ def save_problem_table(table):
 
 
 async def update_active_val(message, attempts, problem_id):
+    # attempts include forfeit attempts
+    active = False
     if len(attempts) < constants.NO_PLAYERS:
-        return
+        active = True
+    import problem_files
     for a in attempts:
-        if a[constants.ProblemFileStruct.PERCENT.value] < constants.MIN_PERCENT:
-            return
+        if not problem_files.is_a_forfeit_attempt(a) and \
+                a[constants.ProblemFileStruct.PERCENT.value] < constants.MIN_PERCENT:
+            active = True
     problems = get_problem_table()
     prob_name = ""
     for p in problems:
         if p[constants.ProblemTableStruct.ID.value] == problem_id:
-            p[constants.ProblemTableStruct.ACTIVE.value] = False
+            p[constants.ProblemTableStruct.ACTIVE.value] = active
             prob_name = p[constants.ProblemTableStruct.NAME.value]
+            break
     save_problem_table(problems)
-    await display_problem_marked_inactive(message, problem_id, prob_name)
+    if not active:
+        await display_problem_marked_inactive(message, problem_id, prob_name)
 
 
 async def display_problem_marked_inactive(message, problem_id, name):
@@ -93,7 +99,8 @@ def get_unused_problem_id():
 
 def get_active_ids():
     problems = get_problem_table()
-    return [p[constants.ProblemTableStruct.ID.value] for p in problems if p[constants.ProblemTableStruct.ACTIVE.value]]
+    return [p[constants.ProblemTableStruct.ID.value] for p in problems
+            if p[constants.ProblemTableStruct.ACTIVE.value] != "False"]
 
 
 def get_active_problems():

@@ -91,6 +91,7 @@ class Delete:
         if not problems_table.problem_id_exists(problem_id):
             import error_messages
             await error_messages.error_problem_does_not_exist(message, problem_id)
+            return
         # Updates score on leaderboard as well
         problem_files.delete_problem_file(problem_id)
         problems_table.remove_problem_from_problem_table(problem_id)
@@ -128,9 +129,9 @@ class Attempt:
         if not problems_table.problem_id_exists(problem_id):
             import error_messages
             await error_messages.error_problem_does_not_exist(message, problem_id)
-        username = discord_funcs.get_username(message)
+            return
         # Deletes old one, updates global leaderboard as well
-        await problem_files.update_attempt_to_problem_file(message, username, args[0], args[1], args[2], args[3])
+        await problem_files.update_attempt_to_problem_file(message, args[0], args[1], args[2], args[3])
         await process_leaderboard.display_problem_leader_board(message, problem_id)
 
     def help_message(self):
@@ -304,6 +305,37 @@ class Rename:
         return out
 
 
+# !forfeit {problem ID}
+@implements(CommandFace)
+class Forfeit:
+    def command_title(self):
+        return "!forfeit"
+
+    def no_args(self):
+        return [1]
+
+    def cast_arg_funcs(self):
+        return [[casting_funcs.cast_int]]
+
+    def command_format(self):
+        return "!forfeit {problem ID}"
+
+    async def process(self, message, args):
+        # args = [problem ID]
+        problem_id = args[0]
+        if not problems_table.problem_id_exists(problem_id):
+            import error_messages
+            await error_messages.error_problem_does_not_exist(message, problem_id)
+            return
+        await problem_files.forfeit_problem(message, problem_id)
+        await problem_files.display_successful_forfeit(message, problem_id)
+
+    def help_message(self):
+        out = "Used to \"forfeit\" a problem so an attempt from the user isn't required"
+        out += " for the problem to be made inactive."
+        return out
+
+
 class UserCommands(enum.Enum):
     add = Add()
     delete = Delete()
@@ -312,3 +344,4 @@ class UserCommands(enum.Enum):
     problems = Problems()
     help = Help()
     rename = Rename()
+    forfeit = Forfeit()

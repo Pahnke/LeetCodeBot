@@ -9,6 +9,16 @@ class ProblemFileStruct(enum.Enum):
     LANGUAGE = 3
 
 
+# Forfeit values used to identify
+# a forfeited attempt
+# Can't manually add an attempt with percent < 0
+# so FORFEIT_PERCENT uniquely identifies it
+# the rest is just a "double check"
+FORFEIT_PERCENT = -1
+FORFEIT_BIG_O = "f"
+FORFEIT_LANGUAGE = "Forfeit"
+
+
 class ProblemTableStruct(enum.Enum):
     ID = 0
     NAME = 1
@@ -57,7 +67,8 @@ ALL_ID = -1
 FIRST_ID = 0
 
 # Checking if active
-NO_PLAYERS = 5
+#TODO
+NO_PLAYERS = 2
 MIN_PERCENT = 45.0
 
 # Maximum name length that
