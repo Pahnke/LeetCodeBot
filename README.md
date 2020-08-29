@@ -24,10 +24,16 @@ A discord bot to generate competition to complete LeetCode problems
 
 `!help` - Displays a general help message
 
-`!help {command}` - Displays a help message about for the command
+`!help {command}` - Displays a help message about for the command or config variable
 
 `!rename {display name}` - Sets the user's name when displaying leaderboards to the display name
 
 `!rename` - Clears the user's display name
 
 `!forfeit {problem ID}` - Allows the user to forfeit a problem
+
+`!config` - Displays all config variables and their values
+
+`!config {var name}` - Displays the value of just that variable
+
+`!config {var name}, {var val}` - Sets the variable to the new value

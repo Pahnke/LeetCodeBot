@@ -265,14 +265,19 @@ class Help:
         if len(args) == 0:
             await help.display_general_help(message)
         else:
+            command_name = args[0]
             for user_command in UserCommands:
                 uc_val = user_command.value
-                if (args[0] == uc_val.command_title() or
-                        args[0] == uc_val.command_title()[1:]):
+                if (command_name == uc_val.command_title() or
+                        command_name == uc_val.command_title()[1:]):
                     await help.display_help_message(message, uc_val)
+            for var in config.ConfigVars:
+                if command_name == var.value.var_name():
+                    out = config.var_to_help_str(var.value, config.get_config_vars())
+                    await discord_funcs.reply_to_message(message, out)
 
     def help_message(self):
-        out = "Used to learn more about commands."
+        out = "Used to learn more about commands or config variables."
         return out
 
 
@@ -392,7 +397,11 @@ class Config:
             await config.display_successful_set_var(message, var_name, var_val)
 
     def help_message(self):
-        out = "Used to display and change variable values.\n"
+        out = "Used to display and change variable values."
+        out += " With no arguments, it will display all variables and their values."
+        out += " With 1 argument, it will display just that variable's value."
+        out += " With 2 arguments, it will set the variable to the new value."
+        out += " All variables have default values.\n"
         out += "The possible variables that can be changed are: \n"
         config_vars = config.get_config_vars()
         for var in config.ConfigVars:
