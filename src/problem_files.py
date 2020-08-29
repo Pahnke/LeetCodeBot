@@ -132,6 +132,8 @@ async def forfeit_problem(message, problem_id):
                                          constants.FORFEIT_LANGUAGE)
 
 
+# Currently not used, but this is essentially what forfeiting is
+# It's attempting a problem but with a forfeit entry
 def create_new_forfeit_entry(name):
     return create_new_attempt(name,
                               constants.FORFEIT_PERCENT,

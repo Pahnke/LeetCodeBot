@@ -19,6 +19,10 @@ Functions dealing with this are in: problems_table.py
 data/names.csv
 [discord name, display name]
 Functions dealing with this are in: process_leaderboard.py
+
+data/config.csv
+[var_name, var_val]
+Functions dealing with this are in: config.py
 '''
 
 
