@@ -106,7 +106,7 @@ class Delete:
         out += " However most of the time this command shouldn't be required"
         out += " as problems are automatically made inactive once "
         out += str(no_players)
-        out += " or more players have attempted the problem and got at least "
+        out += " or more players have attempted (or forfeited) the problem and got at least "
         out += str(min_percent)
         out += "% on it"
         return out
