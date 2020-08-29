@@ -5,44 +5,64 @@ import traceback
 
 async def error_wrong_arg_no(message, command, args):
     title = command.command_title()
-    out = error_top(title)
-    out += "Wrong number of arguments found\n"
-    out += "Expected to find "
+    body = "Wrong number of arguments found\n"
+    body += "Expected to find "
     if len(command.no_args()) == 1:
-        out += str(command.no_args()[0])
+        body += str(command.no_args()[0])
     else:
         for i in range(0, len(command.no_args()) - 1):
-            out += str(command.no_args()[i])
+            body += str(command.no_args()[i])
             if i + 2 < len(command.no_args()):
-                out += ", "
-        out += " or " + str(command.no_args()[len(command.no_args()) - 1])
-    out += " arguments but found: "
-    out += str(len(args)) + "\n"
+                body += ", "
+        body += " or " + str(command.no_args()[len(command.no_args()) - 1])
+    body += " arguments but found: "
+    body += str(len(args)) + "\n"
     import help
-    out += help.expect_usage(command)
-    out += error_bottom(title)
-    import discord_funcs
-    await discord_funcs.reply_to_message(message, out)
+    body += help.expect_usage(command)
+    await send_error(message, title, body)
 
 
 async def error_wrong_arg_type(message, command, exc):
     import help
     title = command.command_title()
-    out = error_top(title)
-    out += str(exc) + "\n"
-    out += help.expect_usage(command)
-    out += error_bottom(title)
-    import discord_funcs
-    await discord_funcs.reply_to_message(message, out)
+    body = str(exc) + "\n"
+    body += help.expect_usage(command)
+    await send_error(message, title, body)
+
+
+async def error_wrong_var_type(message, var_name, e):
+    import config
+    title = var_name
+    body = str(e) + "\n"
+    body += "\n"
+    for var in config.ConfigVars:
+        if var.value.var_name() == var_name:
+            body += config.var_to_help_str(var.value, config.get_config_vars())
+            break
+    await send_error(message, title, body)
 
 
 async def error_problem_does_not_exist(message, problem_id):
     title = "Problem ID"
-    out = error_top(title)
-    out += "Problem with ID \"{}\" could not be found\n".format(problem_id)
+    body = "Problem with ID \"{}\" could not be found\n".format(problem_id)
     import possible_commands
     problem_command = possible_commands.UserCommands.problems.value.command_title()
-    out += "Type {} for a list of active problems\n".format(problem_command)
+    body += "Type {} for a list of active problems\n".format(problem_command)
+    await send_error(message, title, body)
+
+
+async def error_var_does_not_exist(message, var_name):
+    import config
+    title = "Var Name"
+    body = "Config variable with name: {} does not exist.\n".format(var_name)
+    body += "\n"
+    body += config.all_config_vars_str()
+    await send_error(message, title, body)
+
+
+async def send_error(message, title, body):
+    out = error_top(title)
+    out += body
     out += error_bottom(title)
     import discord_funcs
     await discord_funcs.reply_to_message(message, out)
@@ -51,14 +71,11 @@ async def error_problem_does_not_exist(message, problem_id):
 # Eg. context = "parsing arguments"
 async def error_unknown(message, e, context):
     title = "Unknown"
-    out = error_top(title)
-    out += "Non-anticipated error while " + context + ":\n"
-    out += str(e) + "\n\n"
-    out += "Stacktrace: \n"
-    out += traceback.format_exc()
-    out += error_bottom(title)
-    import discord_funcs
-    await discord_funcs.reply_to_message(message, out)
+    body = "Non-anticipated error while " + context + ":\n"
+    body += str(e) + "\n\n"
+    body += "Stacktrace: \n"
+    body += traceback.format_exc()
+    await send_error(message, title, body)
 
 
 def error_top(title):

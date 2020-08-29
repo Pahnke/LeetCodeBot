@@ -21,6 +21,13 @@ def cast_int(i):
         raise ValueError("Can't convert \"{}\" to int".format(i))
 
 
+def cast_no_players(n):
+    no_players = cast_int(n)
+    if no_players < 1:
+        raise ValueError("Have to have at least 1 player")
+    return no_players
+
+
 def cast_percent(percent):
     i = ""
     if percent[len(percent) - 1] == "%":

@@ -39,6 +39,11 @@ class NameFileStruct(enum.Enum):
     DISPLAY_NAME = 1
 
 
+class ConfigFileStruct(enum.Enum):
+    VAR_NAME = 0
+    VAR_VALUE = 1
+
+
 class ProblemHeaders(enum.Enum):
     RANK = 0
     NAME = 1
@@ -65,10 +70,6 @@ ALL_ID = -1
 # Problem ID's start at 1 not 0
 # It adds 1 to each found ID
 FIRST_ID = 0
-
-# Checking if active
-NO_PLAYERS = 5
-MIN_PERCENT = 45.0
 
 # Maximum name length that
 # is displayed in on the leaderboard

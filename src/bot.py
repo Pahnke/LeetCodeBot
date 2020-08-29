@@ -40,11 +40,7 @@ def get_token(file_name):
 @client.event
 async def on_ready():
     try:
-        init.create_data_folder()
-        init.create_problems_table()
-        init.create_leaderboard()
-        init.create_attempts_folder()
-        init.create_names_file()
+        init.init_bot()
     except Exception as exc:
         print("Error while initialising: ")
         print(str(exc))

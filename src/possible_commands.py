@@ -7,6 +7,7 @@ import discord_funcs
 import casting_funcs
 import constants
 import enum
+import config
 
 ''' COMMAND CLASSES '''
 
@@ -98,12 +99,15 @@ class Delete:
         await problems_table.display_successful_problem_removal(message, problem_id)
 
     def help_message(self):
+        config_vars = config.get_config_vars()
+        min_percent = config.get_var_val_from_vars(config.ConfigVars.percent.value.var_name(), config_vars)
+        no_players = config.get_var_val_from_vars(config.ConfigVars.players.value.var_name(), config_vars)
         out = "Used to delete a problem from the list of problems."
         out += " However most of the time this command shouldn't be required"
         out += " as problems are automatically made inactive once "
-        out += str(constants.NO_PLAYERS)
+        out += str(no_players)
         out += " or more players have attempted the problem and got at least "
-        out += str(constants.MIN_PERCENT)
+        out += str(min_percent)
         out += "% on it"
         return out
 
@@ -340,6 +344,63 @@ class Forfeit:
         return out
 
 
+# !config
+# !config {var name}
+# !config {var name}, {var value}
+@implements(CommandFace)
+class Config:
+    def command_title(self):
+        return "!config"
+
+    def no_args(self):
+        return [0, 1, 2]
+
+    def cast_arg_funcs(self):
+        return [[], [casting_funcs.cast_str], [casting_funcs.cast_str, casting_funcs.cast_str]]
+
+    def command_format(self):
+        return "!config {var name}?, {var value}?"
+
+    async def process(self, message, args):
+        # args = [(var name)?, (var value)?]
+        if len(args) == 0:
+            out = config.all_config_vars_str()
+            await discord_funcs.reply_to_message(message, out)
+        elif len(args) == 1:
+            var_name = args[0]
+            if not config.check_var_exists(var_name):
+                import error_messages
+                await error_messages.error_var_does_not_exist(message, var_name)
+                return
+            config_vars = config.get_config_vars()
+            var_val = config.get_var_val_from_vars(var_name, config_vars)
+            out = config.var_to_str(var_name, var_val)
+            await discord_funcs.reply_to_message(message, out)
+        elif len(args) == 2:
+            var_name = args[0]
+            if not config.check_var_exists(var_name):
+                import error_messages
+                await error_messages.error_var_does_not_exist(message, var_name)
+                return
+            var_val = args[1]
+            config_vars = await config.set_var(message, var_name, var_val)
+            if config_vars is None:
+                return
+            min_percent = config.get_var_val_from_vars(config.ConfigVars.percent.value.var_name(), config_vars)
+            no_players = config.get_var_val_from_vars(config.ConfigVars.players.value.var_name(), config_vars)
+            problems_table.update_activity_all_problems(min_percent, no_players)
+            await config.display_successful_set_var(message, var_name, var_val)
+
+    def help_message(self):
+        out = "Used to display and change variable values.\n"
+        out += "The possible variables that can be changed are: \n"
+        config_vars = config.get_config_vars()
+        for var in config.ConfigVars:
+            out += config.var_to_help_str(var.value, config_vars)
+            out += "\n"
+        return out
+
+
 class UserCommands(enum.Enum):
     add = Add()
     delete = Delete()
@@ -349,3 +410,4 @@ class UserCommands(enum.Enum):
     help = Help()
     rename = Rename()
     forfeit = Forfeit()
+    config = Config()

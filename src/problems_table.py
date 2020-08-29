@@ -2,6 +2,7 @@ import csv_utils
 import init
 import constants
 import discord_funcs
+import config
 
 ''' PROBLEMS TABLE '''
 
@@ -48,14 +49,10 @@ def save_problem_table(table):
 
 async def update_active_val(message, attempts, problem_id):
     # attempts include forfeit attempts
-    active = False
-    if len(attempts) < constants.NO_PLAYERS:
-        active = True
-    import problem_files
-    for a in attempts:
-        if not problem_files.is_a_forfeit_attempt(a) and \
-                a[constants.ProblemFileStruct.PERCENT.value] < constants.MIN_PERCENT:
-            active = True
+    config_vars = config.get_config_vars()
+    no_players = config.get_var_val_from_vars(config.ConfigVars.players.value.var_name(), config_vars)
+    min_percent = config.get_var_val_from_vars(config.ConfigVars.percent.value.var_name(), config_vars)
+    active = is_problem_active(attempts, min_percent, no_players)
     problems = get_problem_table()
     prob_name = ""
     for p in problems:
@@ -66,6 +63,31 @@ async def update_active_val(message, attempts, problem_id):
     save_problem_table(problems)
     if not active:
         await display_problem_marked_inactive(message, problem_id, prob_name)
+
+
+def is_problem_active(attempts, min_percent, no_players):
+    active = False
+    if len(attempts) < no_players:
+        active = True
+    import problem_files
+    for a in attempts:
+        if not problem_files.is_a_forfeit_attempt(a) and \
+                a[constants.ProblemFileStruct.PERCENT.value] < min_percent:
+            active = True
+    return active
+
+
+def update_activity_all_problems(min_percent, no_players):
+    import problem_files
+    problems = get_problem_table()
+    new_problems = []
+    for p in problems:
+        attempts = problem_files.get_all_attempts(p[constants.ProblemTableStruct.ID.value])
+        active = is_problem_active(attempts, min_percent, no_players)
+        new_entry = p
+        new_entry[constants.ProblemTableStruct.ACTIVE.value] = active
+        new_problems.append(new_entry)
+    save_problem_table(new_problems)
 
 
 async def display_problem_marked_inactive(message, problem_id, name):

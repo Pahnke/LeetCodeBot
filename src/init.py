@@ -2,8 +2,18 @@ import os
 from pathlib import Path
 import process_leaderboard
 import problems_table
+import config
 
 ''' INIT FUNCS '''
+
+
+def init_bot():
+    create_data_folder()
+    create_problems_table()
+    create_leaderboard()
+    create_attempts_folder()
+    create_names_file()
+    create_config_file()
 
 
 def create_data_folder():
@@ -50,3 +60,13 @@ def create_names_file():
         create_data_folder()
     except FileExistsError:
         return
+
+
+def create_config_file():
+    try:
+        Path(config.get_config_file_name()).touch()
+    except FileNotFoundError:
+        create_data_folder()
+    except FileExistsError:
+        return
+
