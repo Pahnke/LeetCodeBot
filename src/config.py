@@ -16,7 +16,16 @@ def get_config_file_name():
 
 def get_config_vars():
     try:
-        return csv_utils.read_csv(get_config_file_name())
+        config_vars = csv_utils.read_csv(get_config_file_name())
+        casted_vars = []
+        for read_var in config_vars:
+            for actual_var in ConfigVars:
+                if actual_var.value.var_name() == read_var[constants.ConfigFileStruct.VAR_NAME.value]:
+                    temp_var = read_var
+                    temp_var[constants.ConfigFileStruct.VAR_VALUE.value] = \
+                        actual_var.value.type_func()(read_var[constants.ConfigFileStruct.VAR_VALUE.value])
+                    casted_vars.append(temp_var)
+        return casted_vars
     except FileNotFoundError:
         init.create_config_file()
         return get_config_vars()
@@ -27,7 +36,7 @@ def get_var_val_from_vars(var_name, config_vars):
                   if v[constants.ConfigFileStruct.VAR_NAME.value] == var_name]
     if len(var_sorted) == 1:
         return var_sorted[0]
-    default_val = [v.default_value() for v in ConfigVars if v.value.var_name() == var_name]
+    default_val = [v.value.default_value() for v in ConfigVars if v.value.var_name() == var_name]
     return default_val[0]
 
 
@@ -41,10 +50,10 @@ async def set_var(message, var_name, var_val_str):
         await error_messages.error_wrong_var_type(message, var_name, e)
         return None
     config_vars = get_config_vars()
-    removed_old = [v for v in config_vars if v[constants.ConfigFileStruct.VAR_NAME.value] != var_name]
-    removed_old.append(create_config_var_entry(var_name, var_val))
-    save_config_vars(config_vars)
-    return config_vars
+    new_config = [v for v in config_vars if v[constants.ConfigFileStruct.VAR_NAME.value] != var_name]
+    new_config.append(create_config_var_entry(var_name, var_val))
+    save_config_vars(new_config)
+    return new_config
 
 
 def create_config_var_entry(var_name, var_val):
@@ -59,7 +68,7 @@ def save_config_vars(config_vars):
 
 
 def var_to_str(var_name, var_val):
-    return var_name + ": " + var_val
+    return var_name + ": " + str(var_val)
 
 
 def check_var_exists(var_name):
@@ -70,10 +79,10 @@ def check_var_exists(var_name):
 
 
 def var_to_help_str(var, config_vars):
-    out = var.var_name() + ": \n"
+    out = "**" + var.var_name() + "**" + ": \n"
     out += "\t" + var.explanation() + "\n"
     out += "Current Value: "
-    out += get_var_val_from_vars(var.var_name(), config_vars)
+    out += str(get_var_val_from_vars(var.var_name(), config_vars))
     out += "\n"
     return out
 
@@ -143,7 +152,8 @@ class Percent:
     def explanation(self):
         out = "Minimum percent required by all attempts at a problem"
         out += " for the problem to be made inactive."
-        out += " If a problem is forfeited, the forfeited \"attempt\" will count as"
+        out += " If a problem is forfeited by a user, the forfeited \"attempt\" will count as"
+        out += " being above the minimum percent."
         out += " being above the minimum percent."
         return out
 

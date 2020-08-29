@@ -405,8 +405,8 @@ class Config:
         out += "The possible variables that can be changed are: \n"
         config_vars = config.get_config_vars()
         for var in config.ConfigVars:
-            out += config.var_to_help_str(var.value, config_vars)
             out += "\n"
+            out += config.var_to_help_str(var.value, config_vars)
         return out
 
 
