@@ -55,9 +55,13 @@ async def on_ready():
 
 @client.event
 async def on_message(message):
+    # Ignores itself, bots,
+    # any message in a server not name CHANNEL_NAME
+    # Doesn't ignore dm's
     if (message.author == client.user
             or message.author.bot
-            or message.channel.name != constants.CHANNEL_NAME):
+            or (not (message.guild is None)
+                and message.channel.name != constants.CHANNEL_NAME)):
         return
 
     import possible_commands
