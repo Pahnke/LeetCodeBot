@@ -91,8 +91,7 @@ class Delete:
         problem_id = args[0]
         if not problems_table.problem_id_exists(problem_id):
             import error_messages
-            await error_messages.error_problem_does_not_exist(message, problem_id)
-            return
+            return await error_messages.error_problem_does_not_exist(message, problem_id)
         # Updates score on leaderboard as well
         problem_files.delete_problem_file(problem_id)
         problems_table.remove_problem_from_problem_table(problem_id)
@@ -132,8 +131,7 @@ class Attempt:
         problem_id = args[0]
         if not problems_table.problem_id_exists(problem_id):
             import error_messages
-            await error_messages.error_problem_does_not_exist(message, problem_id)
-            return
+            return await error_messages.error_problem_does_not_exist(message, problem_id)
         # Deletes old one, updates global leaderboard as well
         await problem_files.update_attempt_to_problem_file(message, args[0], args[1], args[2], args[3])
         await process_leaderboard.display_problem_leader_board(message, problem_id)
@@ -173,8 +171,7 @@ class Leaderboard:
         else:
             if not problems_table.problem_id_exists(args[0]):
                 import error_messages
-                await error_messages.error_problem_does_not_exist(message, args[0])
-                return
+                return await error_messages.error_problem_does_not_exist(message, args[0])
             await process_leaderboard.display_problem_leader_board(message, args[0])
 
     def help_message(self):
@@ -243,8 +240,7 @@ class Problems:
         else:
             if not problems_table.problem_id_exists(args[0]):
                 import error_messages
-                await error_messages.error_problem_does_not_exist(message, args[0])
-                return
+                return await error_messages.error_problem_does_not_exist(message, args[0])
             problem = problems_table.get_problem_table_problem_by_id(args[0])
             out = "Here is problem {}: ".format(args[0])
             await discord_funcs.reply_to_message(message, out)
@@ -281,15 +277,25 @@ class Help:
             await help.display_general_help(message)
         else:
             command_name = args[0]
+            command_found = False
+            # A variable and a command shouldn't have the same name
+            # but in the case they somehow do, the user should see both help messages
             for user_command in UserCommands:
                 uc_val = user_command.value
                 if (command_name == uc_val.command_title() or
                         command_name == uc_val.command_title()[1:]):
                     await help.display_help_message(message, uc_val)
+                    command_found = True
             for var in config.ConfigVars:
                 if command_name == var.value.var_name():
                     out = config.var_to_help_str(var.value, config.get_config_vars())
                     await discord_funcs.reply_to_message(message, out)
+                    command_found = True
+            if command_found:
+                return
+            out = "No command with name \"{}\" was found.\n".format(command_name)
+            await discord_funcs.reply_to_message(message, out)
+            await help.display_general_help(message)
 
     def help_message(self):
         out = "Used to learn more about commands or config variables."
@@ -349,8 +355,7 @@ class Forfeit:
         problem_id = args[0]
         if not problems_table.problem_id_exists(problem_id):
             import error_messages
-            await error_messages.error_problem_does_not_exist(message, problem_id)
-            return
+            return await error_messages.error_problem_does_not_exist(message, problem_id)
         await problem_files.forfeit_problem(message, problem_id)
         await problem_files.display_successful_forfeit(message, problem_id)
 
@@ -390,8 +395,7 @@ class Config:
             var_name = args[0]
             if not config.check_var_exists(var_name):
                 import error_messages
-                await error_messages.error_var_does_not_exist(message, var_name)
-                return
+                return await error_messages.error_var_does_not_exist(message, var_name)
             config_vars = config.get_config_vars()
             var_val = config.get_var_val_from_vars(var_name, config_vars)
             out = config.var_to_str(var_name, var_val)
@@ -400,8 +404,7 @@ class Config:
             var_name = args[0]
             if not config.check_var_exists(var_name):
                 import error_messages
-                await error_messages.error_var_does_not_exist(message, var_name)
-                return
+                return await error_messages.error_var_does_not_exist(message, var_name)
             var_val = args[1]
             config_vars = await config.set_var(message, var_name, var_val)
             if config_vars is None:
