@@ -33,6 +33,14 @@ async def send_problems(message, problems):
     await discord_funcs.reply_to_message(message, show_problems(problems))
 
 
+async def send_no_active_problems(message, dm):
+    if dm:
+        out = "You currently have no active problems"
+    else:
+        out = "There are currently no active problems"
+    await discord_funcs.reply_to_message(message, out)
+
+
 async def display_successful_problem_add(message, problem_id):
     out = "Problem has successfully been added with ID: " + str(problem_id)
     await discord_funcs.reply_to_message(message, out)
@@ -69,12 +77,16 @@ def is_problem_active(attempts, min_percent, no_players):
     active = False
     if len(attempts) < no_players:
         active = True
-    import problem_files
     for a in attempts:
-        if not problem_files.is_a_forfeit_attempt(a) and \
-                a[constants.ProblemFileStruct.PERCENT.value] < min_percent:
+        if attempt_fails(a, min_percent):
             active = True
     return active
+
+
+def attempt_fails(attempt, min_percent):
+    import problem_files
+    return not problem_files.is_a_forfeit_attempt(attempt) and \
+           attempt[constants.ProblemFileStruct.PERCENT.value] < min_percent
 
 
 def update_activity_all_problems(min_percent, no_players):

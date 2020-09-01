@@ -7,6 +7,10 @@ def get_username(message):
     return message.author.name + "#" + message.author.discriminator
 
 
+def is_a_dm(message):
+    return message.guild is None
+
+
 async def reply_to_message(message, reply):
     if len(reply) < constants.MAX_MESSAGE_SIZE:
         await message.channel.send(reply)

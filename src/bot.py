@@ -2,6 +2,7 @@ import discord
 import parsing_commands
 import init
 import constants
+import discord_funcs
 
 '''
 data/attempts/{problemId}.csv
@@ -60,7 +61,7 @@ async def on_message(message):
     # Doesn't ignore dm's
     if (message.author == client.user
             or message.author.bot
-            or (not (message.guild is None)
+            or (not (discord_funcs.is_a_dm(message))
                 and message.channel.name != constants.CHANNEL_NAME)):
         return
 

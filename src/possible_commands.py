@@ -207,14 +207,29 @@ class Problems:
         if len(args) == 0:
             active_problems = problems_table.get_active_problems()
             if len(active_problems) == 0:
-                out = "There are currently no active problems"
+                return await problems_table.send_no_active_problems(message, False)
+            if not discord_funcs.is_a_dm(message):
+                out = "Here are the active problems: "
                 await discord_funcs.reply_to_message(message, out)
-                return
-
-            out = "Here are the active problems: "
-            await discord_funcs.reply_to_message(message, out)
-            await problems_table.send_problems(message, active_problems)
-
+                await problems_table.send_problems(message, active_problems)
+            else:
+                name = discord_funcs.get_username(message)
+                config_vars = config.get_config_vars()
+                min_percent = config.get_var_val_from_vars(config.ConfigVars.percent.value.var_name(), config_vars)
+                new_problem_ids = []
+                for p in active_problems:
+                    problem_id = p[constants.ProblemTableStruct.ID.value]
+                    attempts = problem_files.get_all_attempts(problem_id)
+                    userAttempt = [a for a in attempts if a[constants.ProblemFileStruct.NAME.value] == name]
+                    if len(userAttempt) == 0 or problems_table.attempt_fails(userAttempt[0], min_percent):
+                        new_problem_ids.append(problem_id)
+                new_active_problems = [p for p in active_problems
+                                       if p[constants.ProblemTableStruct.ID.value] in new_problem_ids]
+                if len(new_active_problems) == 0:
+                    return await problems_table.send_no_active_problems(message, True)
+                out = "Here are your active problems"
+                await discord_funcs.reply_to_message(message, out)
+                await problems_table.send_problems(message, new_active_problems)
         elif args[0] == constants.ALL_ID:
             all_problems = problems_table.get_all_problems()
             if len(all_problems) == 0:
