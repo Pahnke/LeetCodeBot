@@ -61,6 +61,8 @@ class GlobalHeaders(enum.Enum):
     AVERAGE_PERCENT = 4
 
 
+SOURCE_CODE_URL = "https://github.com/Pahnke/LeetCodeBot"
+
 # Channel name that bot responds to
 CHANNEL_NAME = "leetcode"
 

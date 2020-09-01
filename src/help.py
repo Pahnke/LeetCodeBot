@@ -1,4 +1,5 @@
 import discord_funcs
+import constants
 
 ''' HELP '''
 
@@ -44,6 +45,9 @@ async def display_general_help(message):
     out = "**LeetCodeBot**\n"
     out += "\tThis bot is designed to keep track of LeetCode problems"
     out += " and users' attempts at them."
+    out += " The bot responds to messages in a channel named \"{}\"".format(constants.CHANNEL_NAME)
+    out += " or via dm'ing it."
+    out += " The source code for the bot can be found at: <{}>.".format(constants.SOURCE_CODE_URL)
     help_command = possible_commands.UserCommands.help.value.command_title()
     out += " Type {} followed by a command to learn more about it.\n".format(help_command)
     out += list_all_commands()
