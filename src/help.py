@@ -41,7 +41,8 @@ def list_to_comma_or_str(input_list, is_or):
 
 async def display_general_help(message):
     import possible_commands
-    out = "This bot is designed to keep track of LeetCode problems"
+    out = "**LeetCodeBot**\n"
+    out += "\tThis bot is designed to keep track of LeetCode problems"
     out += " and users' attempts at them."
     help_command = possible_commands.UserCommands.help.value.command_title()
     out += " Type {} followed by a command to learn more about it.\n".format(help_command)
@@ -51,7 +52,7 @@ async def display_general_help(message):
 
 def list_all_commands():
     import possible_commands
-    out = "Available commands:\n"
+    out = "**Available commands:**\n"
     for command in possible_commands.UserCommands:
         out += "\t`" + command.value.command_format() + "`\n"
     return out

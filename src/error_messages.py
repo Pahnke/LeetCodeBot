@@ -76,8 +76,11 @@ async def error_unknown(message, e, context):
 
 
 def error_top(title):
-    return "---- ERROR: " + title + " ----\n"
+    return "---- **ERROR:** *" + title + "* ----\n"
 
 
 def error_bottom(title):
-    return "-" * len(error_top(title)) + "\n"
+    # The *'s in the error top, 4 is the closest I could get
+    # as the default font isn't monospace
+    no_formatting_chars = 4
+    return "-" * (len(error_top(title)) - no_formatting_chars) + "\n"

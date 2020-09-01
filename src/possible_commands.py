@@ -105,6 +105,7 @@ class Delete(CommandFace):
     def help_message(self):
         out = "Used to delete a problem from the list of problems."
         out += " However most of the time this command shouldn't be required"
+        out += " (especially since users can forfeit problems)"
         out += " as problems are automatically made inactive."
         out += help.explain_inactive_str()
         return out
