@@ -154,7 +154,6 @@ class Percent:
         out += " for the problem to be made inactive."
         out += " If a problem is forfeited by a user, the forfeited \"attempt\" will count as"
         out += " being above the minimum percent."
-        out += " being above the minimum percent."
         return out
 
 

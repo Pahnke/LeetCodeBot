@@ -10,11 +10,8 @@ async def error_wrong_arg_no(message, command, args):
     if len(command.no_args()) == 1:
         body += str(command.no_args()[0])
     else:
-        for i in range(0, len(command.no_args()) - 1):
-            body += str(command.no_args()[i])
-            if i + 2 < len(command.no_args()):
-                body += ", "
-        body += " or " + str(command.no_args()[len(command.no_args()) - 1])
+        import help
+        body += help.list_to_comma_or_str(command.no_args(), True)
     body += " arguments but found: "
     body += str(len(args)) + "\n"
     import help

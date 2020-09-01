@@ -1,4 +1,5 @@
 import constants
+import help
 
 ''' CASTING FUNCS '''
 
@@ -79,8 +80,20 @@ def cast_difficulty(diff):
     try:
         a = constants.DIFFICULTY_MULTIPLIER[diff]
     except KeyError as _:
-        raise ValueError("Difficulty level \"{}\" not recognised".format(input_diff))
+        out = "Difficulty level \"{}\" not recognised.".format(input_diff)
+        out += difficulties_to_str()
+        raise ValueError(out)
     return diff
+
+
+def difficulties_to_str():
+    out = " The available difficulties are: "
+    diffs_as_list = []
+    for diff in constants.DIFFICULTY_MULTIPLIER:
+        diffs_as_list.append(str(diff))
+    out += help.list_to_comma_or_str(diffs_as_list, True)
+    out += "."
+    return out
 
 
 def cast_display_name(name):

@@ -74,7 +74,9 @@ class Add(CommandFace):
         await problems_table.display_successful_problem_add(message, new_id)
 
     def help_message(self):
-        out = "Used to add a new problem to the list of problems"
+        out = "Used to add a new problem to the list of problems."
+        out += casting_funcs.difficulties_to_str()
+        out += " The first letter of each difficulty is also accepted as the difficulty."
         return out
 
 
@@ -101,16 +103,10 @@ class Delete(CommandFace):
         await problems_table.display_successful_problem_removal(message, problem_id)
 
     def help_message(self):
-        config_vars = config.get_config_vars()
-        min_percent = config.get_var_val_from_vars(config.ConfigVars.percent.value.var_name(), config_vars)
-        no_players = config.get_var_val_from_vars(config.ConfigVars.players.value.var_name(), config_vars)
         out = "Used to delete a problem from the list of problems."
         out += " However most of the time this command shouldn't be required"
-        out += " as problems are automatically made inactive once "
-        out += str(no_players)
-        out += " or more players have attempted (or forfeited) the problem and got at least "
-        out += str(min_percent)
-        out += "% on it"
+        out += " as problems are automatically made inactive."
+        out += help.explain_inactive_str()
         return out
 
 
@@ -137,8 +133,13 @@ class Attempt(CommandFace):
 
     def help_message(self):
         out = "Used to submit an attempt at a problem."
+        out += " If you attempt a problem you previously forfeited,"
+        out += " the forfeited attempt is replaced by the new attempt."
+        out += " It is optional whether or not you add the \"O\" and brackets for the Big O"
+        out += " and it is also optional whether or not you put \"%\" after your percentage."
         out += " Get the problem ID for a problem by typing "
-        out += UserCommands.problems.value.command_title()
+        out += "`" + UserCommands.problems.value.command_title() + "`"
+        out += "."
         return out
 
 
@@ -173,7 +174,24 @@ class Leaderboard(CommandFace):
         out = "Used to display one of the leaderboards."
         out += " If no argument is given then the global leaderboard is shown."
         out += " If a problem ID is given as an argument then the leaderboard for just that problem will be shown."
-        out += " If the argument is {} then every problem leader board will be shown".format(constants.ALL_ID)
+        out += " If the argument is {} then every problem leader board will be shown.".format(constants.ALL_ID)
+        out += "\n**Explanation:**\n"
+        out += "\tThe leaderboard for each problem is based off percentage for each user's attempt."
+        out += " The global leaderboard is an accumulation of all of the individual problem leaderboards."
+        out += " The rankings for it are based off number of points, then average percentage."
+        out += " Points are awarded on all attempts (points aren't awarded when players forfeit)."
+        out += " The way points are calculated is by 1 + the total number of people who have attempted a problem"
+        out += " minus your position in the leaderboard for that problem."
+        out += " So if you came second and 5 people attempt a problem, you would get: 1 + 5 - 2 points"
+        out += " so 4 points."
+        out += " Points are then multiplied by a difficulty multiplier to"
+        out += " encourage people to go for the harder problems."
+        out += " The difficulty multipliers are: "
+        diffs_points = []
+        for diff in constants.DIFFICULTY_MULTIPLIER:
+            diffs_points.append(str(diff) + ": " + str(constants.DIFFICULTY_MULTIPLIER[diff]))
+        out += help.list_to_comma_or_str(diffs_points, False)
+        out += "."
         return out
 
 
@@ -244,7 +262,8 @@ class Problems(CommandFace):
         out += " then only active problems for that user are shown."
         out += " If the argument is a problem ID then just that problem will be shown."
         out += " If the argument is {} then".format(constants.ALL_ID)
-        out += " every problem (including inactive problems) will be shown"
+        out += " every problem (including inactive problems) will be shown."
+        out += help.explain_inactive_str()
         return out
 
 
@@ -287,6 +306,8 @@ class Help(CommandFace):
 
     def help_message(self):
         out = "Used to learn more about commands or config variables."
+        out += " Use {} followed by a command or config variable".format(self.command_title())
+        out += " to learn more about it."
         return out
 
 
@@ -316,6 +337,8 @@ class Rename(CommandFace):
         out += " The maximum name length is {}.".format(constants.MAX_DISPLAY_NAME)
         out += " To remove your display name and use your default name"
         out += " use {} with no arguments.".format(UserCommands.rename.value.command_title())
+        out += " Changing your display name won't effect how values are internally stored"
+        out += " so name clashes, while not advised, are allowed."
         return out
 
 
@@ -401,6 +424,7 @@ class Config(CommandFace):
         for var in config.ConfigVars:
             out += "\n"
             out += config.var_to_help_str(var.value, config_vars)
+        out += "."
         return out
 
 
