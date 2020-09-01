@@ -68,8 +68,9 @@ async def on_message(message):
     import possible_commands
     inputCommand = None
     for possible_command in possible_commands.UserCommands:
-        if message.content.startswith(possible_command.value.command_title()):
-            inputCommand = possible_command.value
+        for possible_start in possible_command.value.all_command_titles():
+            if message.content.startswith(possible_start):
+                inputCommand = possible_command.value
 
     if inputCommand is None:
         return

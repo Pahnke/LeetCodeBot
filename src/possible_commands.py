@@ -1,4 +1,4 @@
-from implements import Interface, implements
+from abc import ABC, abstractmethod
 import problems_table
 import problem_files
 import help
@@ -12,29 +12,40 @@ import config
 ''' COMMAND CLASSES '''
 
 
-class CommandFace(Interface):
+class CommandFace(ABC):
     def command_title(self):
-        # "!command"
+        return self.all_command_titles()[0]
+
+    @abstractmethod
+    def all_command_titles(self):
+        # ["!command", "!commands"]
+        # Main one goes first
         pass
 
     def no_args(self):
-        # [0, 1, 2]
-        pass
+        return [len(funcs) for funcs in self.cast_arg_funcs()]
 
+    @abstractmethod
     def cast_arg_funcs(self):
         # [[], [cast_str], [cast_str, cast_percent]]
         # If invalid type, cast_func's should throw a ValueError
         pass
 
-    def command_format(self):
-        # "!command arg1, arg2"
+    @abstractmethod
+    def argument_names(self):
+        #arg1, arg2
         pass
 
+    def command_format(self):
+        return self.command_title() + " " + self.argument_names()
+
+    @abstractmethod
     def process(self, message, args):
         # The function wanted to be called
         # when the command is sent
         pass
 
+    @abstractmethod
     def help_message(self):
         # An explanation about what the function does
         # and how to use it
@@ -42,21 +53,17 @@ class CommandFace(Interface):
 
 
 # !add {difficulty}, {name}, {url}
-@implements(CommandFace)
-class Add:
-    def command_title(self):
-        return "!add"
-
-    def no_args(self):
-        return [3]
+class Add(CommandFace):
+    def all_command_titles(self):
+        return ["!add"]
 
     def cast_arg_funcs(self):
         return [[casting_funcs.cast_difficulty,
                  casting_funcs.cast_str,
                  casting_funcs.cast_str]]
 
-    def command_format(self):
-        return "!add {difficulty}, {name}, {url}"
+    def argument_names(self):
+        return "{difficulty}, {name}, {url}"
 
     async def process(self, message, args):
         # args = ["difficulty", "name", "url"]
@@ -72,19 +79,15 @@ class Add:
 
 
 # !delete {problem ID}
-@implements(CommandFace)
-class Delete:
-    def command_title(self):
-        return "!delete"
-
-    def no_args(self):
-        return [1]
+class Delete(CommandFace):
+    def all_command_titles(self):
+        return ["!delete"]
 
     def cast_arg_funcs(self):
         return [[casting_funcs.cast_int]]
 
-    def command_format(self):
-        return "!delete {problem ID}"
+    def argument_names(self):
+        return "{problem ID}"
 
     async def process(self, message, args):
         # args = [problem ID]
@@ -112,19 +115,15 @@ class Delete:
 
 
 # !attempt {problem ID}, {better %}, {big O}, {language}
-@implements(CommandFace)
-class Attempt:
-    def command_title(self):
-        return "!attempt"
-
-    def no_args(self):
-        return [4]
+class Attempt(CommandFace):
+    def all_command_titles(self):
+        return ["!attempt"]
 
     def cast_arg_funcs(self):
         return [[casting_funcs.cast_int, casting_funcs.cast_percent, casting_funcs.cast_big_o, casting_funcs.cast_str]]
 
-    def command_format(self):
-        return "!attempt {problem ID}, {better %}, {big O}, {language}"
+    def argument_names(self):
+        return "{problem ID}, {better %}, {big O}, {language}"
 
     async def process(self, message, args):
         # args - [problem ID, better %, Big O, Language]
@@ -146,19 +145,15 @@ class Attempt:
 # !leaderboard
 # !leaderboard {problem ID}
 # !leaderboard -1
-@implements(CommandFace)
-class Leaderboard:
-    def command_title(self):
-        return "!leaderboard"
-
-    def no_args(self):
-        return [0, 1]
+class Leaderboard(CommandFace):
+    def all_command_titles(self):
+        return ["!leaderboard", "!leaderboards"]
 
     def cast_arg_funcs(self):
         return [[], [casting_funcs.cast_int]]
 
-    def command_format(self):
-        return "!leaderboard {problem ID}?"
+    def argument_names(self):
+        return "{problem ID}?"
 
     async def process(self, message, args):
         # args = [(problem ID || -1)?]
@@ -185,19 +180,15 @@ class Leaderboard:
 # !problems
 # !problems {problem ID}
 # !problems -1
-@implements(CommandFace)
-class Problems:
-    def command_title(self):
-        return "!problems"
-
-    def no_args(self):
-        return [0, 1]
+class Problems(CommandFace):
+    def all_command_titles(self):
+        return ["!problems", "!problem"]
 
     def cast_arg_funcs(self):
         return [[], [casting_funcs.cast_int]]
 
-    def command_format(self):
-        return "!problems {problem ID}?"
+    def argument_names(self):
+        return "{problem ID}?"
 
     async def process(self, message, args):
         # args = [(problem ID || -1)?]
@@ -257,19 +248,15 @@ class Problems:
 
 # !help
 # !help {command}?
-@implements(CommandFace)
-class Help:
-    def command_title(self):
-        return "!help"
-
-    def no_args(self):
-        return [0, 1]
+class Help(CommandFace):
+    def all_command_titles(self):
+        return ["!help"]
 
     def cast_arg_funcs(self):
         return [[], [casting_funcs.cast_str]]
 
-    def command_format(self):
-        return "!help {command}?"
+    def argument_names(self):
+        return "{command}?"
 
     async def process(self, message, args):
         # args = [(command)?]
@@ -282,8 +269,7 @@ class Help:
             # but in the case they somehow do, the user should see both help messages
             for user_command in UserCommands:
                 uc_val = user_command.value
-                if (command_name == uc_val.command_title() or
-                        command_name == uc_val.command_title()[1:]):
+                if uc_matches_command_name(uc_val, command_name):
                     await help.display_help_message(message, uc_val)
                     command_found = True
             for var in config.ConfigVars:
@@ -294,8 +280,8 @@ class Help:
             if command_found:
                 return
             out = "No command with name \"{}\" was found.\n".format(command_name)
+            out += help.list_all_commands()
             await discord_funcs.reply_to_message(message, out)
-            await help.display_general_help(message)
 
     def help_message(self):
         out = "Used to learn more about commands or config variables."
@@ -303,19 +289,15 @@ class Help:
 
 
 # !rename {display name}?
-@implements(CommandFace)
-class Rename:
-    def command_title(self):
-        return "!rename"
-
-    def no_args(self):
-        return [0, 1]
+class Rename(CommandFace):
+    def all_command_titles(self):
+        return ["!rename"]
 
     def cast_arg_funcs(self):
         return [[], [casting_funcs.cast_display_name]]
 
-    def command_format(self):
-        return "!rename {display name}?"
+    def argument_names(self):
+        return "{display name}?"
 
     async def process(self, message, args):
         # args = [(display name)?]
@@ -336,19 +318,15 @@ class Rename:
 
 
 # !forfeit {problem ID}
-@implements(CommandFace)
-class Forfeit:
-    def command_title(self):
-        return "!forfeit"
-
-    def no_args(self):
-        return [1]
+class Forfeit(CommandFace):
+    def all_command_titles(self):
+        return ["!forfeit"]
 
     def cast_arg_funcs(self):
         return [[casting_funcs.cast_int]]
 
-    def command_format(self):
-        return "!forfeit {problem ID}"
+    def argument_names(self):
+        return "{problem ID}"
 
     async def process(self, message, args):
         # args = [problem ID]
@@ -372,19 +350,15 @@ class Forfeit:
 # !config
 # !config {var name}
 # !config {var name}, {var value}
-@implements(CommandFace)
-class Config:
-    def command_title(self):
-        return "!config"
-
-    def no_args(self):
-        return [0, 1, 2]
+class Config(CommandFace):
+    def all_command_titles(self):
+        return ["!config"]
 
     def cast_arg_funcs(self):
         return [[], [casting_funcs.cast_str], [casting_funcs.cast_str, casting_funcs.cast_str]]
 
-    def command_format(self):
-        return "!config {var name}?, {var value}?"
+    def argument_names(self):
+        return "{var name}?, {var value}?"
 
     async def process(self, message, args):
         # args = [(var name)?, (var value)?]
@@ -438,3 +412,11 @@ class UserCommands(enum.Enum):
     rename = Rename()
     forfeit = Forfeit()
     config = Config()
+
+
+def uc_matches_command_name(uc, command_name):
+    for possible_name in uc.all_command_titles():
+        if command_name == possible_name or command_name == possible_name[1:]:
+            return True
+    return False
+

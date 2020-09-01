@@ -18,10 +18,16 @@ async def display_general_help(message):
     out = ""
     help_command = possible_commands.UserCommands.help.value.command_title()
     out += "Type {} followed by a command to learn more about it\n".format(help_command)
-    out += "Available commands:\n"
+    out += list_all_commands()
+    await discord_funcs.reply_to_message(message, out)
+
+
+def list_all_commands():
+    import possible_commands
+    out = "Available commands:\n"
     for command in possible_commands.UserCommands:
         out += "\t`" + command.value.command_format() + "`\n"
-    await discord_funcs.reply_to_message(message, out)
+    return out
 
 
 def expect_usage(command):
