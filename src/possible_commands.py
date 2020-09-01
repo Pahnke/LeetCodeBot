@@ -240,6 +240,8 @@ class Problems(CommandFace):
     def help_message(self):
         out = "Used to display the available problems."
         out += " If no argument is given then all active problems will be shown."
+        out += " If no argument is given and the bot is dm'd,"
+        out += " then only active problems for that user are shown."
         out += " If the argument is a problem ID then just that problem will be shown."
         out += " If the argument is {} then".format(constants.ALL_ID)
         out += " every problem (including inactive problems) will be shown"
