@@ -68,7 +68,7 @@ def save_config_vars(config_vars):
 
 
 def var_to_str(var_name, var_val):
-    return var_name + ": " + str(var_val)
+    return "**" + var_name + ":** *" + str(var_val) + "*"
 
 
 def check_var_exists(var_name):
@@ -81,8 +81,8 @@ def check_var_exists(var_name):
 def var_to_help_str(var, config_vars):
     out = "**" + var.var_name() + "**" + ": \n"
     out += "\t" + var.explanation() + "\n"
-    out += "Current Value: "
-    out += str(get_var_val_from_vars(var.var_name(), config_vars))
+    out += "**Current Value:** "
+    out += "*" + str(get_var_val_from_vars(var.var_name(), config_vars)) + "*"
     out += "\n"
     return out
 
